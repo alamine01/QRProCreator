@@ -3,7 +3,29 @@ import { recordVCardDownload, detectDeviceInfo } from './firebase';
 
 export async function getImageFromUrl(url: string): Promise<string | null> {
   try {
-    const response = await fetch(url);
+    // Vérifier si l'URL est valide
+    if (!url || !url.startsWith('http')) {
+      console.warn('URL d\'image invalide:', url);
+      return null;
+    }
+
+    // Essayer de récupérer l'image avec un timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondes timeout
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      mode: 'cors',
+      credentials: 'omit'
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.warn('Erreur HTTP lors de la récupération de l\'image:', response.status, response.statusText);
+      return null;
+    }
+
     const blob = await response.blob();
     
     return new Promise((resolve) => {
@@ -14,11 +36,20 @@ export async function getImageFromUrl(url: string): Promise<string | null> {
           base64String.split(',')[1] : base64String;
         resolve(base64Data);
       };
-      reader.onerror = () => resolve(null);
+      reader.onerror = () => {
+        console.warn('Erreur lors de la lecture de l\'image');
+        resolve(null);
+      };
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.error('Error fetching image:', error);
+    if (error.name === 'AbortError') {
+      console.warn('Timeout lors de la récupération de l\'image');
+    } else if (error.message.includes('CORS')) {
+      console.warn('Erreur CORS lors de la récupération de l\'image - l\'image ne sera pas incluse dans la vCard');
+    } else {
+      console.warn('Erreur lors de la récupération de l\'image:', error.message);
+    }
     return null;
   }
 }
@@ -29,20 +60,26 @@ export async function generateVCard(user: User): Promise<string> {
 
   // Try to get photo data if profile picture exists
   if (user.profilePicture) {
+    console.log('Tentative de récupération de la photo de profil:', user.profilePicture);
     try {
       const imageResult = await getImageFromUrl(user.profilePicture);
       if (imageResult) {
         photoData = imageResult;
+        console.log('Photo de profil récupérée avec succès');
         // Determine image type from URL
         if (user.profilePicture.includes('.png')) {
           imageType = 'PNG';
         } else if (user.profilePicture.includes('.gif')) {
           imageType = 'GIF';
         }
+      } else {
+        console.warn('Impossible de récupérer la photo de profil - la vCard sera générée sans photo');
       }
     } catch (error) {
-      console.error('Error processing photo:', error);
+      console.warn('Erreur lors du traitement de la photo:', error);
     }
+  } else {
+    console.log('Aucune photo de profil définie');
   }
 
   const lines = [
@@ -75,7 +112,9 @@ export async function generateVCard(user: User): Promise<string> {
 
 export async function downloadVCard(user: User, userId?: string) {
   try {
+    console.log('Génération de la vCard pour:', user.firstName, user.lastName);
     const vCardContent = await generateVCard(user);
+    
     const blob = new Blob([vCardContent], { type: 'text/vcard;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -85,6 +124,8 @@ export async function downloadVCard(user: User, userId?: string) {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    
+    console.log('vCard téléchargée avec succès');
     
     // Enregistrer le téléchargement si userId est fourni
     if (userId) {
@@ -96,14 +137,14 @@ export async function downloadVCard(user: User, userId?: string) {
         });
         console.log('Téléchargement vCard enregistré avec succès');
       } catch (trackingError) {
-        console.error('Erreur lors de l\'enregistrement du téléchargement vCard:', trackingError);
+        console.warn('Erreur lors de l\'enregistrement du téléchargement vCard:', trackingError);
         // Ne pas empêcher le téléchargement si le tracking échoue
       }
     }
     
     console.log('vCard download completed successfully');
   } catch (error) {
-    console.error('Error creating vCard:', error);
+    console.error('Erreur lors de la création de la vCard:', error);
     alert('Une erreur est survenue lors de la création de la carte de visite. Veuillez réessayer.');
   }
 }
