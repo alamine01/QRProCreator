@@ -17,7 +17,13 @@ import {
   AlertCircle,
   Package,
   Truck,
-  Home
+  Home,
+  Smartphone,
+  Sticker,
+  Gift,
+  Plus,
+  Minus,
+  ExternalLink
 } from 'lucide-react';
 
 export default function OrderProductsPage() {
@@ -34,8 +40,8 @@ export default function OrderProductsPage() {
     notes: ''
   });
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
-    method: 'mobile_money',
-    provider: 'orange_money',
+    method: 'wave_direct',
+    provider: 'wave',
     phoneNumber: '',
     status: 'pending'
   });
@@ -109,6 +115,32 @@ export default function OrderProductsPage() {
 
   const calculateTotal = () => {
     return selectedProducts.reduce((sum, item) => sum + item.totalPrice, 0);
+  };
+
+  const getProductIcon = (productId: string) => {
+    switch (productId) {
+      case 'nfc-card':
+        return <Smartphone className="h-8 w-8 text-blue-600" />;
+      case 'qr-stickers':
+        return <Sticker className="h-8 w-8 text-green-600" />;
+      case 'complete-pack':
+        return <Gift className="h-8 w-8 text-purple-600" />;
+      default:
+        return <Package className="h-8 w-8 text-gray-600" />;
+    }
+  };
+
+  const getProductColor = (productId: string) => {
+    switch (productId) {
+      case 'nfc-card':
+        return 'border-blue-200 bg-blue-50 hover:border-blue-300';
+      case 'qr-stickers':
+        return 'border-green-200 bg-green-50 hover:border-green-300';
+      case 'complete-pack':
+        return 'border-purple-200 bg-purple-50 hover:border-purple-300';
+      default:
+        return 'border-gray-200 bg-gray-50 hover:border-gray-300';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -210,28 +242,51 @@ export default function OrderProductsPage() {
               <span>Nos produits</span>
             </h2>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               {PRODUCTS.map((product) => (
-                <div key={product.id} className="border border-gray-200 rounded-xl p-4 hover:border-primary-300 transition-colors duration-200">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
-                      <p className="text-sm text-gray-600 mb-3">{product.description}</p>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg font-bold text-primary-600">{product.price.toLocaleString()} {product.currency}</span>
-                        {product.id === 'complete-pack' && (
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                            Économisez 1,500 FCFA
-                          </span>
-                        )}
+                <div key={product.id} className={`border-2 rounded-2xl p-6 transition-all duration-300 ${getProductColor(product.id)}`}>
+                  <div className="flex items-start space-x-4">
+                    {/* Icône du produit */}
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                        {getProductIcon(product.id)}
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleProductSelect(product)}
-                      className="ml-4 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors duration-200 text-sm font-medium"
-                    >
-                      Ajouter
-                    </button>
+                    
+                    {/* Informations du produit */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">{product.name}</h3>
+                          <p className="text-sm text-gray-600 mb-4 leading-relaxed">{product.description}</p>
+                          
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-2xl font-bold text-primary-600">{product.price.toLocaleString()}</span>
+                              <span className="text-sm font-medium text-gray-500">{product.currency}</span>
+                            </div>
+                            
+                            {product.id === 'complete-pack' && (
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+                                  Économisez 1,500 FCFA
+                                </span>
+                                <span className="text-xs text-gray-500 line-through">23,000 FCFA</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Bouton d'ajout */}
+                        <button
+                          onClick={() => handleProductSelect(product)}
+                          className="ml-4 px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 text-sm font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center space-x-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span>Ajouter</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -240,31 +295,42 @@ export default function OrderProductsPage() {
             {/* Panier */}
             {selectedProducts.length > 0 && (
               <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-4">Votre panier</h3>
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                  <ShoppingCart className="h-5 w-5 text-primary-500" />
+                  <span>Votre panier</span>
+                </h3>
                 <div className="space-y-3">
                   {selectedProducts.map((item) => (
-                    <div key={item.productId} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{item.productName}</p>
-                        <p className="text-sm text-gray-600">{item.unitPrice.toLocaleString()} FCFA × {item.quantity}</p>
+                    <div key={item.productId} className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <div className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center">
+                          {getProductIcon(item.productId)}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">{item.productName}</p>
+                          <p className="text-sm text-gray-600">{item.unitPrice.toLocaleString()} FCFA × {item.quantity}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
-                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors duration-200"
-                        >
-                          -
-                        </button>
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
-                        <button
-                          onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
-                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors duration-200"
-                        >
-                          +
-                        </button>
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
+                            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors duration-200"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <span className="w-8 text-center font-semibold text-gray-900">{item.quantity}</span>
+                          <button
+                            onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
+                            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors duration-200"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <span className="font-bold text-primary-600 min-w-[80px] text-right">{item.totalPrice.toLocaleString()} FCFA</span>
                         <button
                           onClick={() => handleProductRemove(item.productId)}
-                          className="ml-2 text-red-500 hover:text-red-700 transition-colors duration-200"
+                          className="ml-2 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
                         >
                           <AlertCircle className="h-4 w-4" />
                         </button>
@@ -272,10 +338,10 @@ export default function OrderProductsPage() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="mt-6 pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-gray-900">Total:</span>
-                    <span className="text-xl font-bold text-primary-600">{calculateTotal().toLocaleString()} FCFA</span>
+                    <span className="text-xl font-bold text-gray-900">Total:</span>
+                    <span className="text-2xl font-bold text-primary-600">{calculateTotal().toLocaleString()} FCFA</span>
                   </div>
                 </div>
               </div>
@@ -361,77 +427,107 @@ export default function OrderProductsPage() {
 
               {/* Méthode de paiement */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Méthode de paiement *</label>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="mobile_money"
-                      name="payment_method"
-                      value="mobile_money"
-                      checked={paymentInfo.method === 'mobile_money'}
-                      onChange={(e) => setPaymentInfo(prev => ({ ...prev, method: e.target.value as 'mobile_money' }))}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                    />
-                    <label htmlFor="mobile_money" className="text-sm font-medium text-gray-700">
-                      Mobile Money
-                    </label>
-                  </div>
+                <label className="block text-sm font-medium text-gray-700 mb-4">Méthode de paiement *</label>
+                <div className="space-y-4">
                   
-                  {paymentInfo.method === 'mobile_money' && (
-                    <div className="ml-7 space-y-3">
-                      <div className="flex space-x-4">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            id="orange_money"
-                            name="provider"
-                            value="orange_money"
-                            checked={paymentInfo.provider === 'orange_money'}
-                            onChange={(e) => setPaymentInfo(prev => ({ ...prev, provider: e.target.value as 'orange_money' }))}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <label htmlFor="orange_money" className="text-sm text-gray-700">Orange Money</label>
+                  {/* Paiement Wave Direct */}
+                  <div className="border-2 border-green-200 bg-green-50 rounded-xl p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <input
+                        type="radio"
+                        id="wave_direct"
+                        name="payment_method"
+                        value="wave_direct"
+                        checked={paymentInfo.method === 'wave_direct'}
+                        onChange={(e) => setPaymentInfo(prev => ({ ...prev, method: e.target.value as 'wave_direct' }))}
+                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-green-300"
+                      />
+                      <label htmlFor="wave_direct" className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-green-600 rounded flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">W</span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            id="wave"
-                            name="provider"
-                            value="wave"
-                            checked={paymentInfo.provider === 'wave'}
-                            onChange={(e) => setPaymentInfo(prev => ({ ...prev, provider: e.target.value as 'wave' }))}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <label htmlFor="wave" className="text-sm text-gray-700">Wave</label>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Numéro de téléphone</label>
-                        <input
-                          type="tel"
-                          value={paymentInfo.phoneNumber || ''}
-                          onChange={(e) => setPaymentInfo(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          placeholder="77 123 45 67"
-                        />
-                      </div>
+                        <span>Paiement Wave Direct (Recommandé)</span>
+                      </label>
                     </div>
-                  )}
-                  
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="cash_on_delivery"
-                      name="payment_method"
-                      value="cash_on_delivery"
-                      checked={paymentInfo.method === 'cash_on_delivery'}
-                      onChange={(e) => setPaymentInfo(prev => ({ ...prev, method: e.target.value as 'cash_on_delivery' }))}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                    />
-                    <label htmlFor="cash_on_delivery" className="text-sm font-medium text-gray-700">
-                      Paiement à la livraison
-                    </label>
+                    <p className="text-xs text-gray-600 ml-7 mb-3">
+                      Payez directement via Wave avec votre téléphone. Rapide et sécurisé.
+                    </p>
+                    {paymentInfo.method === 'wave_direct' && (
+                      <div className="ml-7">
+                        <a
+                          href="https://pay.wave.com/m/M_sn_gV5Fky3h1d5y/c/sn/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Ouvrir Wave pour payer
+                        </a>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Montant à payer: <span className="font-semibold">{calculateTotal().toLocaleString()} FCFA</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Orange Money */}
+                  <div className="border border-orange-200 bg-orange-50 rounded-xl p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <input
+                        type="radio"
+                        id="orange_money"
+                        name="payment_method"
+                        value="orange_money"
+                        checked={paymentInfo.method === 'orange_money'}
+                        onChange={(e) => setPaymentInfo(prev => ({ ...prev, method: e.target.value as 'orange_money' }))}
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-orange-300"
+                      />
+                      <label htmlFor="orange_money" className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-orange-600 rounded flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">O</span>
+                        </div>
+                        <span>Orange Money</span>
+                      </label>
+                    </div>
+                    {paymentInfo.method === 'orange_money' && (
+                      <div className="ml-7">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Numéro Orange Money</label>
+                          <input
+                            type="tel"
+                            value={paymentInfo.phoneNumber || ''}
+                            onChange={(e) => setPaymentInfo(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            placeholder="77 123 45 67"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Montant à payer: <span className="font-semibold">{calculateTotal().toLocaleString()} FCFA</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Paiement à la livraison */}
+                  <div className="border border-gray-200 bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        id="cash_on_delivery"
+                        name="payment_method"
+                        value="cash_on_delivery"
+                        checked={paymentInfo.method === 'cash_on_delivery'}
+                        onChange={(e) => setPaymentInfo(prev => ({ ...prev, method: e.target.value as 'cash_on_delivery' }))}
+                        className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300"
+                      />
+                      <label htmlFor="cash_on_delivery" className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+                        <Truck className="h-5 w-5 text-gray-600" />
+                        <span>Paiement à la livraison</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-600 ml-7 mt-2">
+                      Payez en espèces lors de la réception de votre commande.
+                    </p>
                   </div>
                 </div>
               </div>

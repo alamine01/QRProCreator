@@ -88,7 +88,7 @@ export interface CustomerInfo {
 }
 
 export interface PaymentInfo {
-  method: 'mobile_money' | 'cash_on_delivery';
+  method: 'wave_direct' | 'orange_money' | 'cash_on_delivery';
   provider?: 'orange_money' | 'wave';
   phoneNumber?: string;
   transactionId?: string;
