@@ -120,24 +120,89 @@ export default function OrderProductsPage() {
   const getProductIcon = (productId: string) => {
     switch (productId) {
       case 'nfc-card':
-        return <Smartphone className="h-8 w-8 text-blue-600" />;
+        return (
+          <div className="relative">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            </div>
+          </div>
+        );
       case 'qr-stickers':
-        return <Sticker className="h-8 w-8 text-green-600" />;
+        return (
+          <div className="relative">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm6-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm6-2h6v6h-6v-6zm2 2v2h2v-2h-2z"/>
+              </svg>
+            </div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </div>
+          </div>
+        );
       case 'complete-pack':
-        return <Gift className="h-8 w-8 text-purple-600" />;
+        return (
+          <div className="relative">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">%</span>
+            </div>
+          </div>
+        );
       default:
         return <Package className="h-8 w-8 text-gray-600" />;
+    }
+  };
+
+  const getProductAdvantages = (productId: string) => {
+    switch (productId) {
+      case 'nfc-card':
+        return [
+          { icon: '🚚', text: 'Livraison gratuite à Dakar & Thiès' },
+          { icon: '💧', text: 'Résistant à l\'eau et aux chocs' },
+          { icon: '⚡', text: 'Scan instantané NFC' },
+          { icon: '🎨', text: 'Design personnalisable' }
+        ];
+      case 'qr-stickers':
+        return [
+          { icon: '🚚', text: 'Livraison gratuite à Dakar & Thiès' },
+          { icon: '💧', text: 'Résistant à l\'eau et aux UV' },
+          { icon: '📱', text: 'Compatible tous smartphones' },
+          { icon: '✨', text: 'Qualité impression HD' }
+        ];
+      case 'complete-pack':
+        return [
+          { icon: '🚚', text: 'Livraison gratuite à Dakar & Thiès' },
+          { icon: '💰', text: 'Économisez 1,500 FCFA' },
+          { icon: '🎁', text: 'Pack complet tout-en-un' },
+          { icon: '⭐', text: 'Solution professionnelle' }
+        ];
+      default:
+        return [];
     }
   };
 
   const getProductColor = (productId: string) => {
     switch (productId) {
       case 'nfc-card':
-        return 'border-blue-200 bg-blue-50 hover:border-blue-300';
+        return 'border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 hover:border-blue-300';
       case 'qr-stickers':
-        return 'border-green-200 bg-green-50 hover:border-green-300';
+        return 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-100 hover:border-green-300';
       case 'complete-pack':
-        return 'border-purple-200 bg-purple-50 hover:border-purple-300';
+        return 'border-purple-200 bg-gradient-to-br from-purple-50 to-pink-100 hover:border-purple-300';
       default:
         return 'border-gray-200 bg-gray-50 hover:border-gray-300';
     }
@@ -242,60 +307,81 @@ export default function OrderProductsPage() {
               <span>Nos produits</span>
             </h2>
             
-            {/* Grille de produits moderne */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+            {/* Grille de produits ultra-moderne */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
               {PRODUCTS.map((product) => (
-                <div key={product.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div key={product.id} className={`group relative ${getProductColor(product.id)} rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 transform hover:-translate-y-2 hover:scale-105`}>
                   {/* Header avec icône et badge */}
-                  <div className="relative p-4 sm:p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center ${getProductColor(product.id).includes('blue') ? 'bg-blue-100' : getProductColor(product.id).includes('green') ? 'bg-green-100' : 'bg-purple-100'}`}>
-                        {getProductIcon(product.id)}
+                  <div className="relative p-6 sm:p-8">
+                    {/* Badge de réduction */}
+                    {product.id === 'complete-pack' && (
+                      <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                        -1,500 FCFA
                       </div>
-                      
-                      {product.id === 'complete-pack' && (
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                          -1,500 FCFA
-                        </div>
-                      )}
+                    )}
+                    
+                    {/* Icône principale */}
+                    <div className="flex justify-center mb-6">
+                      {getProductIcon(product.id)}
                     </div>
                     
                     {/* Titre et description */}
-                    <div className="mb-4">
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors duration-200">
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors duration-300">
                         {product.name}
                       </h3>
-                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                      <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                         {product.description}
                       </p>
                     </div>
                     
+                    {/* Avantages */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3 text-center">✨ Avantages inclus</h4>
+                      <div className="grid grid-cols-1 gap-2">
+                        {getProductAdvantages(product.id).map((advantage, index) => (
+                          <div key={index} className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
+                            <span className="text-base">{advantage.icon}</span>
+                            <span>{advantage.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
                     {/* Prix */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-baseline space-x-1">
-                        <span className="text-2xl sm:text-3xl font-bold text-primary-600">
+                    <div className="text-center mb-6">
+                      <div className="flex items-center justify-center space-x-2 mb-2">
+                        <span className="text-3xl sm:text-4xl font-bold text-primary-600">
                           {product.price.toLocaleString()}
                         </span>
                         <span className="text-sm font-medium text-gray-500">{product.currency}</span>
                       </div>
                       
                       {product.id === 'complete-pack' && (
-                        <span className="text-sm text-gray-400 line-through">23,000 FCFA</span>
+                        <div className="flex items-center justify-center space-x-2">
+                          <span className="text-sm text-gray-400 line-through">23,000 FCFA</span>
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                            Économie de 6.5%
+                          </span>
+                        </div>
                       )}
                     </div>
                     
                     {/* Bouton d'ajout */}
                     <button
                       onClick={() => handleProductSelect(product)}
-                      className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 group-hover:scale-105"
+                      className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold py-4 px-6 rounded-2xl hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center space-x-3 text-sm sm:text-base group-hover:scale-105"
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-5 w-5" />
                       <span>Ajouter au panier</span>
                     </button>
                   </div>
                   
-                  {/* Effet de survol */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-primary-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                  {/* Effet de survol avec particules */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-primary-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                  
+                  {/* Bordure animée */}
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-primary-500/20 to-primary-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                 </div>
               ))}
             </div>
