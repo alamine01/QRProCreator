@@ -179,24 +179,24 @@ export default function OrderProductsPage() {
     switch (productId) {
       case 'nfc-card':
         return [
-          { icon: '🚚', text: 'Livraison gratuite à Dakar & Thiès' },
-          { icon: '💧', text: 'Résistant à l\'eau et aux chocs' },
-          { icon: '⚡', text: 'Scan instantané NFC' },
-          { icon: '🎨', text: 'Design personnalisable' }
+          'Livraison gratuite à Dakar & Thiès',
+          'Résistant à l\'eau et aux chocs',
+          'Scan instantané NFC',
+          'Design personnalisable'
         ];
       case 'qr-stickers':
         return [
-          { icon: '🚚', text: 'Livraison gratuite à Dakar & Thiès' },
-          { icon: '💧', text: 'Résistant à l\'eau et aux UV' },
-          { icon: '📱', text: 'Compatible tous smartphones' },
-          { icon: '✨', text: 'Qualité impression HD' }
+          'Livraison gratuite à Dakar & Thiès',
+          'Résistant à l\'eau et aux UV',
+          'Compatible tous smartphones',
+          'Qualité impression HD'
         ];
       case 'complete-pack':
         return [
-          { icon: '🚚', text: 'Livraison gratuite à Dakar & Thiès' },
-          { icon: '💰', text: 'Économisez 1,500 FCFA' },
-          { icon: '🎁', text: 'Pack complet tout-en-un' },
-          { icon: '⭐', text: 'Solution professionnelle' }
+          'Livraison gratuite à Dakar & Thiès',
+          'Économisez 1,500 FCFA',
+          'Pack complet tout-en-un',
+          'Solution professionnelle'
         ];
       default:
         return [];
@@ -345,12 +345,14 @@ export default function OrderProductsPage() {
                     
                     {/* Avantages */}
                     <div className="mb-6">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-3 text-center">✨ Avantages inclus</h4>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3 text-center">Avantages inclus</h4>
                       <div className="grid grid-cols-1 gap-2">
                         {getProductAdvantages(product.id).map((advantage, index) => (
-                          <div key={index} className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                            <span className="text-base">{advantage.icon}</span>
-                            <span>{advantage.text}</span>
+                          <div key={index} className="flex items-center space-x-2 text-xs sm:text-sm text-green-600">
+                            <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>{advantage}</span>
                           </div>
                         ))}
                       </div>
