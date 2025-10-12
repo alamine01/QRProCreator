@@ -20,7 +20,8 @@ import {
   Phone,
   Mail,
   CreditCard,
-  AlertTriangle
+  AlertTriangle,
+  User
 } from 'lucide-react';
 
 export default function MyOrdersPage() {
