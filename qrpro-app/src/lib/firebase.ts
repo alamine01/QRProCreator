@@ -2,7 +2,7 @@ import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, Auth } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, orderBy, limit, Firestore } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
-import { User } from '@/types';
+import { User, Order, Product, OrderItem, CustomerInfo, PaymentInfo } from '@/types';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyB0KphmN9-QMDdn7lRjicz4QbJVrX99mnc",
@@ -470,6 +470,234 @@ export const detectDeviceInfo = async () => {
     district,
     isUnique
   };
+};
+
+// ===== FONCTIONS POUR LE SYSTÈME DE COMMANDES =====
+
+// Produits disponibles
+export const PRODUCTS: Product[] = [
+  {
+    id: 'nfc-card',
+    name: 'Carte NFC',
+    description: 'Carte NFC personnalisée avec votre QR code',
+    price: 20000,
+    currency: 'FCFA',
+    category: 'nfc',
+    isActive: true
+  },
+  {
+    id: 'qr-stickers',
+    name: 'Autocollants QR Code',
+    description: 'Pack de 3 autocollants avec votre QR code',
+    price: 3000,
+    currency: 'FCFA',
+    category: 'stickers',
+    isActive: true
+  },
+  {
+    id: 'complete-pack',
+    name: 'Pack Complet',
+    description: 'Carte NFC + 3 autocollants QR Code (Économisez 1,500 FCFA)',
+    price: 21500,
+    currency: 'FCFA',
+    category: 'pack',
+    isActive: true
+  }
+];
+
+// Générer un numéro de commande unique
+const generateOrderNumber = (): string => {
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `QR${year}${month}${day}${random}`;
+};
+
+// Créer une nouvelle commande
+export const createOrder = async (
+  userId: string,
+  items: OrderItem[],
+  customerInfo: CustomerInfo,
+  paymentInfo: PaymentInfo,
+  notes?: string
+): Promise<string> => {
+  try {
+    const orderNumber = generateOrderNumber();
+    const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    
+    const orderData: Omit<Order, 'id'> = {
+      userId,
+      orderNumber,
+      items,
+      customerInfo,
+      paymentInfo,
+      totalAmount,
+      currency: 'FCFA',
+      status: 'pending',
+      notes,
+      createdAt: new Date() as any,
+      updatedAt: new Date() as any
+    };
+
+    const docRef = await addDoc(collection(db, 'orders'), orderData);
+    
+    // Envoyer une notification email de confirmation
+    await sendOrderConfirmationEmail(orderData.customerInfo.email, orderNumber, totalAmount);
+    
+    return docRef.id;
+  } catch (error) {
+    console.error('Erreur lors de la création de la commande:', error);
+    throw error;
+  }
+};
+
+// Récupérer les commandes d'un utilisateur
+export const getUserOrders = async (userId: string): Promise<Order[]> => {
+  try {
+    const ordersQuery = query(
+      collection(db, 'orders'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(ordersQuery);
+    const orders: Order[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      orders.push({
+        id: doc.id,
+        ...doc.data()
+      } as Order);
+    });
+    
+    return orders;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des commandes:', error);
+    throw error;
+  }
+};
+
+// Récupérer une commande par ID
+export const getOrderById = async (orderId: string): Promise<Order | null> => {
+  try {
+    const orderDoc = await getDoc(doc(db, 'orders', orderId));
+    
+    if (orderDoc.exists()) {
+      return {
+        id: orderDoc.id,
+        ...orderDoc.data()
+      } as Order;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Erreur lors de la récupération de la commande:', error);
+    throw error;
+  }
+};
+
+// Mettre à jour le statut d'une commande
+export const updateOrderStatus = async (
+  orderId: string,
+  status: Order['status'],
+  notes?: string,
+  cancellationReason?: string
+): Promise<void> => {
+  try {
+    const updateData: any = {
+      status,
+      updatedAt: new Date()
+    };
+    
+    if (notes) {
+      updateData.notes = notes;
+    }
+    
+    if (status === 'delivered') {
+      updateData.deliveredAt = new Date();
+    }
+    
+    if (status === 'cancelled') {
+      updateData.cancelledAt = new Date();
+      updateData.cancellationReason = cancellationReason;
+    }
+    
+    await updateDoc(doc(db, 'orders', orderId), updateData);
+    
+    // Envoyer une notification email de changement de statut
+    const order = await getOrderById(orderId);
+    if (order) {
+      await sendOrderStatusUpdateEmail(order.customerInfo.email, order.orderNumber, status);
+    }
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du statut:', error);
+    throw error;
+  }
+};
+
+// Annuler une commande (seulement si en attente)
+export const cancelOrder = async (orderId: string, reason: string): Promise<void> => {
+  try {
+    const order = await getOrderById(orderId);
+    
+    if (!order) {
+      throw new Error('Commande non trouvée');
+    }
+    
+    if (order.status !== 'pending') {
+      throw new Error('Seules les commandes en attente peuvent être annulées');
+    }
+    
+    await updateOrderStatus(orderId, 'cancelled', undefined, reason);
+  } catch (error) {
+    console.error('Erreur lors de l\'annulation de la commande:', error);
+    throw error;
+  }
+};
+
+// Fonction pour envoyer un email de confirmation de commande
+const sendOrderConfirmationEmail = async (email: string, orderNumber: string, totalAmount: number): Promise<void> => {
+  try {
+    // Ici vous pouvez intégrer votre service d'email (SendGrid, Mailgun, etc.)
+    // Pour l'instant, on log juste l'information
+    console.log(`Email de confirmation envoyé à ${email} pour la commande ${orderNumber} (${totalAmount} FCFA)`);
+    
+    // TODO: Implémenter l'envoi d'email réel
+    // await emailService.send({
+    //   to: email,
+    //   subject: `Confirmation de commande ${orderNumber}`,
+    //   template: 'order-confirmation',
+    //   data: { orderNumber, totalAmount }
+    // });
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi de l\'email de confirmation:', error);
+  }
+};
+
+// Fonction pour envoyer un email de mise à jour de statut
+const sendOrderStatusUpdateEmail = async (email: string, orderNumber: string, status: Order['status']): Promise<void> => {
+  try {
+    const statusMessages = {
+      pending: 'Votre commande est en attente de traitement',
+      processing: 'Votre commande est en cours de traitement',
+      delivered: 'Votre commande a été livrée',
+      cancelled: 'Votre commande a été annulée'
+    };
+    
+    console.log(`Email de mise à jour envoyé à ${email} pour la commande ${orderNumber}: ${statusMessages[status]}`);
+    
+    // TODO: Implémenter l'envoi d'email réel
+    // await emailService.send({
+    //   to: email,
+    //   subject: `Mise à jour de votre commande ${orderNumber}`,
+    //   template: 'order-status-update',
+    //   data: { orderNumber, status, message: statusMessages[status] }
+    // });
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi de l\'email de mise à jour:', error);
+  }
 };
 
 export { auth, db, storage, googleProvider };
