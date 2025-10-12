@@ -424,6 +424,23 @@ export default function StatisticsPage() {
                   </div>
                 </div>
               </div>
+              
+              {/* Message informatif si pas de téléchargements */}
+              {(statsData?.totalVCardDownloads || 0) === 0 && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5">
+                      <Download className="h-3 w-3 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-900 mb-1">Aucun téléchargement encore</p>
+                      <p className="text-xs text-blue-700">
+                        Les statistiques de téléchargements apparaîtront ici une fois que quelqu'un téléchargera votre carte de visite depuis votre profil public.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         )}
