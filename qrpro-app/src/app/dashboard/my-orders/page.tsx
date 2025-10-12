@@ -272,8 +272,10 @@ export default function MyOrdersPage() {
                         <div className="flex items-center space-x-2">
                           <CreditCard className="h-4 w-4 text-gray-400" />
                           <span>
-                            {order.paymentInfo.method === 'mobile_money' 
-                              ? `Mobile Money (${order.paymentInfo.provider})` 
+                            {order.paymentInfo.method === 'wave_direct' 
+                              ? 'Wave Direct' 
+                              : order.paymentInfo.method === 'orange_money'
+                              ? 'Orange Money'
                               : 'Paiement à la livraison'
                             }
                           </span>
@@ -404,8 +406,10 @@ export default function MyOrdersPage() {
                   <div className="text-sm">
                     <p className="font-medium text-gray-700">Méthode</p>
                     <p className="text-gray-900">
-                      {selectedOrder.paymentInfo.method === 'mobile_money' 
-                        ? `Mobile Money (${selectedOrder.paymentInfo.provider})` 
+                      {selectedOrder.paymentInfo.method === 'wave_direct' 
+                        ? 'Wave Direct' 
+                        : selectedOrder.paymentInfo.method === 'orange_money'
+                        ? 'Orange Money'
                         : 'Paiement à la livraison'
                       }
                     </p>
