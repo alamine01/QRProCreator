@@ -42,13 +42,13 @@ export async function getImageFromUrl(url: string): Promise<string | null> {
       };
       reader.readAsDataURL(blob);
     });
-  } catch (error) {
-    if (error.name === 'AbortError') {
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
       console.warn('Timeout lors de la récupération de l\'image');
-    } else if (error.message.includes('CORS')) {
+    } else if (error?.message?.includes('CORS')) {
       console.warn('Erreur CORS lors de la récupération de l\'image - l\'image ne sera pas incluse dans la vCard');
     } else {
-      console.warn('Erreur lors de la récupération de l\'image:', error.message);
+      console.warn('Erreur lors de la récupération de l\'image:', error?.message);
     }
     return null;
   }

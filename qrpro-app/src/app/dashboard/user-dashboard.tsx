@@ -287,11 +287,11 @@ export default function DashboardPage() {
                         setIsMobileMenuOpen(false);
                       }}
                       className="w-full flex items-center justify-center space-x-2 p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                    >
-                      <LogOut className="h-4 w-4" />
+              >
+                <LogOut className="h-4 w-4" />
                       <span className="font-medium">Déconnexion</span>
-                    </button>
-                  </div>
+              </button>
+            </div>
                 </div>
               </div>
             )}
@@ -305,7 +305,7 @@ export default function DashboardPage() {
           <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-4 lg:space-y-0 lg:space-x-8">
             {/* Profile Picture */}
             <div className="flex-shrink-0">
-              {user.profilePicture ? (
+            {user.profilePicture ? (
                 <img 
                   src={user.profilePicture} 
                   alt="Photo de profil" 
@@ -316,8 +316,8 @@ export default function DashboardPage() {
                   <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
                     {(user.firstName?.[0] || 'U')}{(user.lastName?.[0] || 'U')}
                   </span>
-                </div>
-              )}
+              </div>
+            )}
             </div>
             
             {/* User Info */}
@@ -331,7 +331,7 @@ export default function DashboardPage() {
               
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 lg:justify-start">
-                <a
+                <a 
                   href={profileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -401,7 +401,7 @@ export default function DashboardPage() {
               </div>
               
               <div className="space-y-3 sm:space-y-4">
-                <button
+                <button 
                   onClick={handleDownloadQR}
                   className="inline-flex items-center justify-center w-full px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 text-sm sm:text-base"
                 >
@@ -431,9 +431,9 @@ export default function DashboardPage() {
                       className="inline-flex items-center px-3 sm:px-4 py-2 bg-primary-100 text-primary-700 rounded-lg sm:rounded-xl font-medium hover:bg-primary-200 transition-colors duration-200 text-sm sm:text-base"
                     >
                       <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                      Modifier le profil
-                    </button>
-                  </div>
+                Modifier le profil
+              </button>
+            </div>
             
             <div className="space-y-4 sm:space-y-6">
               <div className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl">
@@ -555,7 +555,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </button>
-
+            
             <button 
               onClick={handleViewPublicProfile}
               className="group p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl hover:from-blue-100 hover:to-blue-200 transition-all duration-300 border border-blue-200/50"
@@ -570,8 +570,8 @@ export default function DashboardPage() {
                 </div>
               </div>
             </button>
-
-            <button
+            
+            <button 
               onClick={handleDownloadQR}
               className="group p-4 sm:p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl sm:rounded-2xl hover:from-green-100 hover:to-green-200 transition-all duration-300 border border-green-200/50"
             >

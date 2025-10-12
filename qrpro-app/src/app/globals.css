@@ -136,3 +136,19 @@ body {
 .icon-hover-glow:hover {
   animation: iconGlowHover 1s ease-in-out;
 }
+
+/* Animation pour la notification toast */
+@keyframes slideIn {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}

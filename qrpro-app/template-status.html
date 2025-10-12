@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Mise à jour de commande</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #f2731a 0%, #e35a0f 100%); color: white; padding: 30px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
+        .header h2 { margin: 10px 0 0 0; font-size: 18px; opacity: 0.9; }
+        .content { padding: 30px; }
+        .greeting { font-size: 18px; margin-bottom: 20px; color: #2c3e50; }
+        .status { background: #3b82f6; color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0; font-weight: bold; font-size: 18px; }
+        .footer { text-align: center; margin-top: 30px; color: #6c757d; font-size: 14px; padding: 20px; background: #f8f9fa; }
+        .contact-info { margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{company_name}}</h1>
+            <h2>Mise à jour de commande</h2>
+        </div>
+        <div class="content">
+            <div class="greeting">
+                Bonjour <strong>{{to_name}}</strong>,
+            </div>
+            
+            <p>Nous vous informons d'une mise à jour concernant votre commande <strong>{{order_number}}</strong>.</p>
+            
+            <div class="status">
+                {{status_icon}} {{status_message}}
+            </div>
+            
+            <p>Pour toute question, n'hésitez pas à nous contacter.</p>
+            
+            <div class="footer">
+                <p><strong>Cordialement,</strong><br>L'équipe {{company_name}}</p>
+                <div class="contact-info">
+                    <p>📧 Email: <a href="mailto:alamine@qrprocreator.com">alamine@qrprocreator.com</a></p>
+                    <p>📱 WhatsApp: <a href="https://wa.me/221771234567">+221 77 123 45 67</a></p>
+                    <p>🌐 Site: <a href="https://qrprocreator.com">qrprocreator.com</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

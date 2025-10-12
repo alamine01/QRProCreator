@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { AuthRedirect } from "@/components/AuthRedirect";
+import { EmailJSInitializer } from "@/components/EmailJSInitializer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
+          <EmailJSInitializer />
           <AuthRedirect />
           {children}
           <WhatsAppFloat />

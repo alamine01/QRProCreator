@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Confirmation de commande</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #f2731a 0%, #e35a0f 100%); color: white; padding: 30px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
+        .header h2 { margin: 10px 0 0 0; font-size: 18px; opacity: 0.9; }
+        .content { padding: 30px; }
+        .greeting { font-size: 18px; margin-bottom: 20px; color: #2c3e50; }
+        .order-details { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #f2731a; }
+        .order-details h3 { margin-top: 0; color: #2c3e50; font-size: 20px; }
+        .item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
+        .item:last-child { border-bottom: none; }
+        .total { font-weight: bold; font-size: 20px; color: #f2731a; margin-top: 15px; padding-top: 15px; border-top: 2px solid #e9ecef; }
+        .next-steps { background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #28a745; }
+        .next-steps h3 { margin-top: 0; color: #155724; }
+        .footer { text-align: center; margin-top: 30px; color: #6c757d; font-size: 14px; padding: 20px; background: #f8f9fa; }
+        .contact-info { margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{company_name}}</h1>
+            <h2>Confirmation de commande</h2>
+        </div>
+        <div class="content">
+            <div class="greeting">
+                Bonjour <strong>{{to_name}}</strong>,
+            </div>
+            
+            <p>Nous avons bien reçu votre commande <strong>{{order_number}}</strong> et nous vous en remercions !</p>
+            
+            <div class="order-details">
+                <h3>📦 Détails de votre commande :</h3>
+                <div class="item">
+                    <span>{{items_list}}</span>
+                </div>
+                <div class="item total">
+                    <span><strong>Total</strong></span>
+                    <span><strong>{{total_amount}} FCFA</strong></span>
+                </div>
+            </div>
+            
+            <div class="next-steps">
+                <h3>🚀 Prochaines étapes :</h3>
+                <ul>
+                    <li>Votre commande est en cours de traitement</li>
+                    <li>Nous vous tiendrons informé de son avancement par email</li>
+                    <li>Vous recevrez un appel de confirmation sous 24h</li>
+                    <li>Livraison prévue sous 3-5 jours ouvrés</li>
+                </ul>
+            </div>
+            
+            <p>Pour toute question concernant votre commande, n'hésitez pas à nous contacter.</p>
+            
+            <div class="footer">
+                <p><strong>Cordialement,</strong><br>L'équipe {{company_name}}</p>
+                <div class="contact-info">
+                    <p>📧 Email: <a href="mailto:alamine@qrprocreator.com">alamine@qrprocreator.com</a></p>
+                    <p>📱 WhatsApp: <a href="https://wa.me/221771234567">+221 77 123 45 67</a></p>
+                    <p>🌐 Site: <a href="https://qrprocreator.com">qrprocreator.com</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, Auth } from 'firebase/aut
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, orderBy, limit, Firestore } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
 import { User, Order, Product, OrderItem, CustomerInfo, PaymentInfo } from '@/types';
+import { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } from './email';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyB0KphmN9-QMDdn7lRjicz4QbJVrX99mnc",
@@ -425,9 +426,14 @@ export const detectDeviceInfo = async () => {
   
   try {
     // Utiliser une API IP gratuite pour obtenir des informations détaillées
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
     const response = await fetch('https://ipapi.co/json/', {
-      timeout: 3000
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     
     if (response.ok) {
       const data = await response.json();
@@ -544,7 +550,13 @@ export const createOrder = async (
     const docRef = await addDoc(collection(db, 'orders'), orderData);
     
     // Envoyer une notification email de confirmation
-    await sendOrderConfirmationEmail(orderData.customerInfo.email, orderNumber, totalAmount);
+    await sendOrderConfirmationEmailToCustomer(
+      orderData.customerInfo.email, 
+      orderNumber, 
+      totalAmount,
+      `${orderData.customerInfo.firstName} ${orderData.customerInfo.lastName}`,
+      items
+    );
     
     return docRef.id;
   } catch (error) {
@@ -558,8 +570,7 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
   try {
     const ordersQuery = query(
       collection(db, 'orders'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', userId)
     );
     
     const querySnapshot = await getDocs(ordersQuery);
@@ -570,6 +581,13 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
         id: doc.id,
         ...doc.data()
       } as Order);
+    });
+    
+    // Tri manuel par date de création (plus récent en premier)
+    orders.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : (a.createdAt ? new Date(a.createdAt as any) : new Date(0));
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : (b.createdAt ? new Date(b.createdAt as any) : new Date(0));
+      return dateB.getTime() - dateA.getTime();
     });
     
     return orders;
@@ -629,7 +647,12 @@ export const updateOrderStatus = async (
     // Envoyer une notification email de changement de statut
     const order = await getOrderById(orderId);
     if (order) {
-      await sendOrderStatusUpdateEmail(order.customerInfo.email, order.orderNumber, status);
+      await sendOrderStatusUpdateEmailToCustomer(
+        order.customerInfo.email, 
+        order.orderNumber, 
+        status,
+        `${order.customerInfo.firstName} ${order.customerInfo.lastName}`
+      );
     }
   } catch (error) {
     console.error('Erreur lors de la mise à jour du statut:', error);
@@ -658,43 +681,24 @@ export const cancelOrder = async (orderId: string, reason: string): Promise<void
 };
 
 // Fonction pour envoyer un email de confirmation de commande
-const sendOrderConfirmationEmail = async (email: string, orderNumber: string, totalAmount: number): Promise<void> => {
+const sendOrderConfirmationEmailToCustomer = async (email: string, orderNumber: string, totalAmount: number, customerName: string, orderItems: OrderItem[]): Promise<void> => {
   try {
-    // Ici vous pouvez intégrer votre service d'email (SendGrid, Mailgun, etc.)
-    // Pour l'instant, on log juste l'information
-    console.log(`Email de confirmation envoyé à ${email} pour la commande ${orderNumber} (${totalAmount} FCFA)`);
+    const items = orderItems.map(item => ({
+      name: item.productName,
+      quantity: item.quantity,
+      price: item.unitPrice
+    }));
     
-    // TODO: Implémenter l'envoi d'email réel
-    // await emailService.send({
-    //   to: email,
-    //   subject: `Confirmation de commande ${orderNumber}`,
-    //   template: 'order-confirmation',
-    //   data: { orderNumber, totalAmount }
-    // });
+    await sendOrderConfirmationEmail(email, orderNumber, totalAmount, customerName, items);
   } catch (error) {
     console.error('Erreur lors de l\'envoi de l\'email de confirmation:', error);
   }
 };
 
 // Fonction pour envoyer un email de mise à jour de statut
-const sendOrderStatusUpdateEmail = async (email: string, orderNumber: string, status: Order['status']): Promise<void> => {
+const sendOrderStatusUpdateEmailToCustomer = async (email: string, orderNumber: string, status: Order['status'], customerName: string): Promise<void> => {
   try {
-    const statusMessages = {
-      pending: 'Votre commande est en attente de traitement',
-      processing: 'Votre commande est en cours de traitement',
-      delivered: 'Votre commande a été livrée',
-      cancelled: 'Votre commande a été annulée'
-    };
-    
-    console.log(`Email de mise à jour envoyé à ${email} pour la commande ${orderNumber}: ${statusMessages[status]}`);
-    
-    // TODO: Implémenter l'envoi d'email réel
-    // await emailService.send({
-    //   to: email,
-    //   subject: `Mise à jour de votre commande ${orderNumber}`,
-    //   template: 'order-status-update',
-    //   data: { orderNumber, status, message: statusMessages[status] }
-    // });
+    await sendOrderStatusUpdateEmail(email, orderNumber, status, customerName);
   } catch (error) {
     console.error('Erreur lors de l\'envoi de l\'email de mise à jour:', error);
   }
