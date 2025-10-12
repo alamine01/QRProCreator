@@ -27,7 +27,9 @@ import {
   UserPlus,
   CreditCard,
   LogOut,
-  BarChart3
+  BarChart3,
+  Menu,
+  X
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -36,6 +38,7 @@ export default function DashboardPage() {
   const [qrCode, setQrCode] = useState<string>('');
   const [profileUrl, setProfileUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -44,6 +47,23 @@ export default function DashboardPage() {
       generateQRCode(url).then(setQrCode);
     }
   }, [user]);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMobileMenuOpen) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('nav')) {
+          setIsMobileMenuOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   const handleDownloadQR = () => {
     if (qrCode) {
@@ -120,36 +140,162 @@ export default function DashboardPage() {
       {/* Modern Navigation */}
       <nav className="glass-effect sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <div className="flex flex-col lg:flex-row justify-between items-center py-3 sm:py-4 lg:py-0 lg:h-16">
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex justify-between items-center py-3 lg:py-0 lg:h-16">
             {/* Logo Section */}
-            <div className="flex items-center space-x-2 sm:space-x-3 mb-3 lg:mb-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white flex items-center justify-center shadow-lg">
-                <QrCode className="w-4 h-4 sm:w-6 sm:h-6 text-primary-500" />
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg">
+                <QrCode className="w-6 h-6 text-primary-500" />
               </div>
-              <span className="text-lg sm:text-xl font-bold gradient-text">QR Pro Creator</span>
+              <span className="text-xl font-bold gradient-text">QR Pro Creator</span>
             </div>
             
             {/* User Info & Actions */}
-            <div className="flex flex-col xs:flex-row items-center space-y-2 xs:space-y-0 xs:space-x-3 sm:space-x-4 w-full lg:w-auto">
+            <div className="flex items-center space-x-4">
               {/* Welcome Message */}
-              <div className="text-center xs:text-left">
-                <span className="text-sm sm:text-base text-gray-700 font-medium">
+              <div className="text-left">
+                <span className="text-base text-gray-700 font-medium">
                   Bienvenue, <span className="text-primary-600 font-semibold">{user.firstName || 'Utilisateur'}</span>
                 </span>
                 {user.lastName && (
-                  <span className="text-sm sm:text-base text-gray-700 font-medium ml-1">{user.lastName}</span>
+                  <span className="text-base text-gray-700 font-medium ml-1">{user.lastName}</span>
                 )}
               </div>
               
               {/* Logout Button */}
               <button 
                 onClick={logout}
-                className="text-gray-500 hover:text-primary-600 transition-colors duration-200 font-medium flex items-center space-x-1 sm:space-x-2 px-2 py-1 rounded-lg hover:bg-gray-50"
+                className="text-gray-500 hover:text-primary-600 transition-colors duration-200 font-medium flex items-center space-x-2 px-2 py-1 rounded-lg hover:bg-gray-50"
               >
-                <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="text-sm sm:text-base">Déconnexion</span>
+                <LogOut className="h-4 w-4" />
+                <span className="text-base">Déconnexion</span>
               </button>
             </div>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="lg:hidden">
+            <div className="flex justify-between items-center py-3">
+              {/* Logo Section */}
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-lg">
+                  <QrCode className="w-4 h-4 text-primary-500" />
+                </div>
+                <span className="text-lg font-bold gradient-text">QR Pro Creator</span>
+              </div>
+              
+              {/* Hamburger Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-6 w-6 text-gray-700" />
+                ) : (
+                  <Menu className="h-6 w-6 text-gray-700" />
+                )}
+              </button>
+            </div>
+
+            {/* Mobile Menu Dropdown */}
+            {isMobileMenuOpen && (
+              <div className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200/50 shadow-lg">
+                <div className="px-3 py-4 space-y-4">
+                  {/* Welcome Message */}
+                  <div className="text-center pb-4 border-b border-gray-200">
+                    <span className="text-sm text-gray-700 font-medium">
+                      Bienvenue, <span className="text-primary-600 font-semibold">{user.firstName || 'Utilisateur'}</span>
+                    </span>
+                    {user.lastName && (
+                      <span className="text-sm text-gray-700 font-medium ml-1">{user.lastName}</span>
+                    )}
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Actions rapides</h3>
+                    
+                    <button 
+                      onClick={() => {
+                        handleEditProfile();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 p-3 bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg hover:from-primary-100 hover:to-primary-200 transition-all duration-200"
+                    >
+                      <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                        <UserPlus className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-gray-900 text-sm">Modifier le profil</div>
+                        <div className="text-xs text-gray-600">Mettre à jour vos informations</div>
+                      </div>
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        handleViewStats();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg hover:from-purple-100 hover:to-purple-200 transition-all duration-200"
+                    >
+                      <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                        <BarChart3 className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-gray-900 text-sm">Statistiques</div>
+                        <div className="text-xs text-gray-600">Analyser les scans de votre QR</div>
+                      </div>
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        handleViewPublicProfile();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all duration-200"
+                    >
+                      <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <Eye className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-gray-900 text-sm">Voir le profil</div>
+                        <div className="text-xs text-gray-600">Voir comment les autres vous voient</div>
+                      </div>
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        handleDownloadQR();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg hover:from-green-100 hover:to-green-200 transition-all duration-200"
+                    >
+                      <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                        <Download className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-gray-900 text-sm">Télécharger QR</div>
+                        <div className="text-xs text-gray-600">Obtenir votre code QR</div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Logout Button */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <button 
+                      onClick={() => {
+                        logout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span className="font-medium">Déconnexion</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </nav>
@@ -350,8 +496,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-6 sm:mt-8 bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-sm p-4 sm:p-6 lg:p-8 border border-white/20">
+        {/* Quick Actions - Hidden on mobile */}
+        <div className="hidden lg:block mt-6 sm:mt-8 bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-sm p-4 sm:p-6 lg:p-8 border border-white/20">
           <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Actions rapides</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <button 
