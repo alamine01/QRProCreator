@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth, getUserProfile, createUserProfile, saveUserProfile } from '@/lib/firebase';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -10,6 +10,8 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   isAdmin: boolean;
+  logout: () => Promise<void>;
+  updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,35 +19,123 @@ const AuthContext = createContext<AuthContextType>({
   firebaseUser: null,
   loading: true,
   isAdmin: false,
+  logout: async () => {},
+  updateUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setFirebaseUser(firebaseUser);
-      
+
       if (firebaseUser) {
-        // TODO: Fetch user profile from Firestore
-        // For now, create a basic user object
-        const userData: User = {
-          id: firebaseUser.uid,
-          googleId: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          firstName: firebaseUser.displayName?.split(' ')[0] || '',
-          lastName: firebaseUser.displayName?.split(' ')[1] || '',
-          profilePicture: firebaseUser.photoURL || undefined,
-          profileSlug: firebaseUser.email?.split('@')[0] || '',
-          isAdmin: false,
-          createdAt: new Date() as any,
-          updatedAt: new Date() as any,
-        };
-        setUser(userData);
+        try {
+          // Essayer de récupérer le profil existant depuis Firestore
+          let userData = await getUserProfile(firebaseUser.uid);
+          
+          if (!userData) {
+            // Si aucun profil n'existe, créer un nouveau profil
+            const displayName = firebaseUser.displayName || '';
+            const nameParts = displayName.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
+            console.log('Création d\'un nouveau profil utilisateur:', {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+              firstName,
+              lastName
+            });
+
+            userData = {
+              id: firebaseUser.uid,
+              googleId: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              firstName: firstName,
+              lastName: lastName,
+              profilePicture: firebaseUser.photoURL || undefined,
+              profileSlug: firebaseUser.email?.split('@')[0] || '',
+              profession: '',
+              phone: '',
+              phoneSecondary: '',
+              phoneThird: '',
+              phoneFourth: '',
+              address: '',
+              location: '',
+              reviewLink: '',
+              biography: '',
+              linkedin: '',
+              instagram: '',
+              twitter: '',
+              facebook: '',
+              whatsapp: '',
+              youtube: '',
+              tiktok: '',
+              snapchat: '',
+              isAdmin: false,
+              createdAt: new Date() as any,
+              updatedAt: new Date() as any,
+            };
+
+            // Créer le profil dans Firestore
+            await createUserProfile(firebaseUser.uid, userData);
+            console.log('Nouveau profil utilisateur créé dans Firestore');
+          } else {
+            console.log('Profil utilisateur récupéré depuis Firestore');
+          }
+
+          setUser(userData);
+          setIsAdmin(userData.isAdmin || false);
+        } catch (error) {
+          console.error('Erreur lors de la gestion du profil utilisateur:', error);
+          // En cas d'erreur, utiliser les données Google de base
+          const displayName = firebaseUser.displayName || '';
+          const nameParts = displayName.split(' ');
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+
+          const fallbackUserData: User = {
+            id: firebaseUser.uid,
+            googleId: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            firstName: firstName,
+            lastName: lastName,
+            profilePicture: firebaseUser.photoURL || undefined,
+            profileSlug: firebaseUser.email?.split('@')[0] || '',
+            profession: '',
+            phone: '',
+            phoneSecondary: '',
+            phoneThird: '',
+            phoneFourth: '',
+            address: '',
+            location: '',
+            reviewLink: '',
+            biography: '',
+            linkedin: '',
+            instagram: '',
+            twitter: '',
+            facebook: '',
+            whatsapp: '',
+            youtube: '',
+            tiktok: '',
+            snapchat: '',
+            isAdmin: false,
+            createdAt: new Date() as any,
+            updatedAt: new Date() as any,
+          };
+          setUser(fallbackUserData);
+          setIsAdmin(false);
+        }
       } else {
         setUser(null);
+        setIsAdmin(false);
       }
       setLoading(false);
     });
@@ -53,10 +143,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
-  const isAdmin = user?.isAdmin || false;
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      // Forcer la redirection vers la page d'accueil après déconnexion
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const updateUser = async (userData: Partial<User>) => {
+    if (!firebaseUser) {
+      throw new Error('Utilisateur non connecté');
+    }
+
+    try {
+      // Sauvegarder dans Firestore
+      await saveUserProfile(firebaseUser.uid, userData);
+      
+      // Mettre à jour l'état local
+      setUser(prev => prev ? { ...prev, ...userData } : null);
+      
+      console.log('Profil utilisateur mis à jour avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil:', error);
+      throw error;
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, isAdmin }}>
+    <AuthContext.Provider value={{ user, firebaseUser, loading, isAdmin, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

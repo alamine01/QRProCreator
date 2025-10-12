@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -33,17 +33,18 @@
 }
 
 body {
+  font-family: 'Inter', sans-serif;
   background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #e0e7ff 100%);
   color: var(--foreground);
-  font-family: 'Inter', sans-serif;
   min-height: 100vh;
 }
 
 /* Custom glass effect */
 .glass-effect {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
 }
 
 .gradient-bg {
@@ -55,4 +56,83 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Phone container animations */
+.phone-container {
+  perspective: 1000px;
+}
+
+.phone-screen {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+.phone-container:hover .phone-screen {
+  transform: rotateY(5deg) rotateX(5deg);
+}
+
+/* Floating particles */
+.floating-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  background: rgba(242, 115, 26, 0.1);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+}
+
+.particle:nth-child(1) { top: 20%; left: 10%; width: 8px; height: 8px; animation-delay: 0s; }
+.particle:nth-child(2) { top: 60%; left: 80%; width: 12px; height: 12px; animation-delay: 2s; }
+.particle:nth-child(3) { top: 30%; left: 70%; width: 6px; height: 6px; animation-delay: 4s; }
+.particle:nth-child(4) { top: 80%; left: 20%; width: 10px; height: 10px; animation-delay: 1s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+/* Animations pour les icônes des fonctionnalités - Hover uniquement */
+@keyframes iconBounceHover {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(5deg); }
+}
+
+@keyframes iconPulseHover {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+}
+
+@keyframes iconShakeHover {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes iconGlowHover {
+  0%, 100% { box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+  50% { box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+}
+
+/* Classes d'animation pour les icônes - Hover uniquement */
+.icon-hover-bounce:hover {
+  animation: iconBounceHover 0.6s ease-in-out;
+}
+
+.icon-hover-pulse:hover {
+  animation: iconPulseHover 0.8s ease-in-out;
+}
+
+.icon-hover-shake:hover {
+  animation: iconShakeHover 0.4s ease-in-out;
+}
+
+.icon-hover-glow:hover {
+  animation: iconGlowHover 1s ease-in-out;
 }
