@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { getUserStats, StatsData, detectDeviceInfo, recordScan, recordVCardDownload } from '@/lib/firebase';
+import { getUserStats, StatsData } from '@/lib/firebase';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -115,61 +115,6 @@ export default function StatisticsPage() {
     document.body.removeChild(link);
   };
 
-  const handleTestScan = async () => {
-    if (!user) return;
-    
-    try {
-      const deviceInfo = await detectDeviceInfo();
-      console.log('Informations de localisation détectées:', {
-        location: deviceInfo.location,
-        country: deviceInfo.country,
-        city: deviceInfo.city,
-        district: deviceInfo.district
-      });
-      
-      await recordScan(user.id, {
-        ...deviceInfo,
-        ip: 'Test IP',
-      });
-      
-      // Recharger les statistiques
-      const newStats = await getUserStats(user.id, selectedPeriod);
-      setStatsData(newStats);
-      
-      alert(`Scan de test enregistré avec succès !\n\nLocalisation détectée : ${deviceInfo.location}`);
-    } catch (error) {
-      console.error('Erreur lors du test de scan:', error);
-      alert('Erreur lors du test de scan');
-    }
-  };
-
-  const handleTestVCardDownload = async () => {
-    if (!user) return;
-    
-    try {
-      const deviceInfo = await detectDeviceInfo();
-      console.log('Test de téléchargement vCard:', {
-        location: deviceInfo.location,
-        country: deviceInfo.country,
-        city: deviceInfo.city,
-        district: deviceInfo.district
-      });
-      
-      await recordVCardDownload(user.id, {
-        ...deviceInfo,
-        ip: 'Test IP',
-      });
-      
-      // Recharger les statistiques
-      const newStats = await getUserStats(user.id, selectedPeriod);
-      setStatsData(newStats);
-      
-      alert(`Téléchargement vCard de test enregistré avec succès !\n\nLocalisation détectée : ${deviceInfo.location}`);
-    } catch (error) {
-      console.error('Erreur lors du test de téléchargement vCard:', error);
-      alert('Erreur lors du test de téléchargement vCard');
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('fr-FR', {
@@ -230,22 +175,6 @@ export default function StatisticsPage() {
                 <Download className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Exporter</span>
                 <span className="sm:hidden">Export</span>
-              </button>
-              <button
-                onClick={handleTestScan}
-                className="flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Test Scan</span>
-                <span className="sm:hidden">Test</span>
-              </button>
-              <button
-                onClick={handleTestVCardDownload}
-                className="flex items-center justify-center px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors text-sm"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Test vCard</span>
-                <span className="sm:hidden">vCard</span>
               </button>
             </div>
           </div>
