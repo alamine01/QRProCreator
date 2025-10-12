@@ -303,18 +303,18 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
         {/* Welcome Section */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-sm p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 border border-white/20">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-6">
+          <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-4 lg:space-y-0 lg:space-x-8">
             {/* Profile Picture */}
             <div className="flex-shrink-0">
               {user.profilePicture ? (
                 <img 
                   src={user.profilePicture} 
                   alt="Photo de profil" 
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl shadow-lg object-cover" 
+                  className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-xl sm:rounded-2xl shadow-lg object-cover" 
                 />
               ) : (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg">
-                  <span className="text-xl sm:text-3xl font-bold text-white">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg">
+                  <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
                     {(user.firstName?.[0] || 'U')}{(user.lastName?.[0] || 'U')}
                   </span>
                 </div>
@@ -322,32 +322,59 @@ export default function DashboardPage() {
             </div>
             
             {/* User Info */}
-            <div className="flex-1 text-center sm:text-left min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">
+            <div className="flex-1 text-center lg:text-left min-w-0 lg:max-w-md">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 lg:mb-3">
                 {user.firstName || 'Utilisateur'} {user.lastName || ''}
               </h1>
-              <p className="text-sm sm:text-base lg:text-lg text-gray-600 mb-3 sm:mb-4 truncate">
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-4 lg:mb-6">
                 {user.profession || 'Aucune profession définie'}
               </p>
               
               {/* Action Buttons */}
-              <div className="flex flex-col xs:flex-row items-center space-y-2 xs:space-y-0 xs:space-x-3 sm:space-x-4">
+              <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 lg:justify-start">
                 <a
                   href={profileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-primary-100 text-primary-700 rounded-lg sm:rounded-xl font-medium hover:bg-primary-200 transition-colors duration-200 text-sm sm:text-base w-full xs:w-auto"
+                  className="inline-flex items-center justify-center px-4 sm:px-6 py-3 bg-primary-100 text-primary-700 rounded-lg sm:rounded-xl font-medium hover:bg-primary-200 transition-colors duration-200 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
                 >
-                  <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="truncate">Voir le profil public</span>
+                  <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                  <span>Voir le profil public</span>
                 </a>
                 <button
                   onClick={handleCopyProfileUrl}
-                  className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg sm:rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 text-sm sm:text-base w-full xs:w-auto"
+                  className="inline-flex items-center justify-center px-4 sm:px-6 py-3 bg-gray-100 text-gray-700 rounded-lg sm:rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
                 >
-                  {copied ? <Check className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> : <Copy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />}
-                  <span className="truncate">{copied ? 'Copié !' : 'Copier le lien'}</span>
+                  {copied ? <Check className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> : <Copy className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />}
+                  <span>{copied ? 'Copié !' : 'Copier le lien'}</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Desktop Stats Preview */}
+            <div className="hidden lg:flex flex-col space-y-4 flex-1 max-w-xs">
+              <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-4 border border-primary-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
+                    <QrCode className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Code QR actif</p>
+                    <p className="text-xs text-gray-600">Prêt à partager</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                    <Download className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Téléchargements</p>
+                    <p className="text-xs text-gray-600">QR + vCard disponibles</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
