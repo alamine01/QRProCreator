@@ -165,7 +165,7 @@ export default function DashboardPage() {
               {/* Logout Button */}
               <button 
                 onClick={logout}
-                className="text-gray-500 hover:text-primary-600 transition-colors duration-200 font-medium flex items-center space-x-2 px-2 py-1 rounded-lg hover:bg-gray-50"
+                className="text-gray-600 hover:text-red-600 transition-colors duration-200 font-medium flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-red-50 border border-gray-200 hover:border-red-200"
               >
                 <LogOut className="h-4 w-4" />
                 <span className="text-base">Déconnexion</span>
