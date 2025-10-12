@@ -234,7 +234,7 @@ export default function OrderProductsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
           {/* Sélection des produits */}
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-sm p-6 border border-white/20">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
@@ -242,106 +242,129 @@ export default function OrderProductsPage() {
               <span>Nos produits</span>
             </h2>
             
-            <div className="space-y-6">
+            {/* Grille de produits moderne */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
               {PRODUCTS.map((product) => (
-                <div key={product.id} className={`border-2 rounded-2xl p-6 transition-all duration-300 ${getProductColor(product.id)}`}>
-                  <div className="flex items-start space-x-4">
-                    {/* Icône du produit */}
-                    <div className="flex-shrink-0">
-                      <div className="w-16 h-16 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                <div key={product.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                  {/* Header avec icône et badge */}
+                  <div className="relative p-4 sm:p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center ${getProductColor(product.id).includes('blue') ? 'bg-blue-100' : getProductColor(product.id).includes('green') ? 'bg-green-100' : 'bg-purple-100'}`}>
                         {getProductIcon(product.id)}
                       </div>
+                      
+                      {product.id === 'complete-pack' && (
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          -1,500 FCFA
+                        </div>
+                      )}
                     </div>
                     
-                    {/* Informations du produit */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold text-gray-900 mb-2">{product.name}</h3>
-                          <p className="text-sm text-gray-600 mb-4 leading-relaxed">{product.description}</p>
-                          
-                          <div className="flex items-center space-x-3">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-2xl font-bold text-primary-600">{product.price.toLocaleString()}</span>
-                              <span className="text-sm font-medium text-gray-500">{product.currency}</span>
-                            </div>
-                            
-                            {product.id === 'complete-pack' && (
-                              <div className="flex items-center space-x-2">
-                                <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
-                                  Économisez 1,500 FCFA
-                                </span>
-                                <span className="text-xs text-gray-500 line-through">23,000 FCFA</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Bouton d'ajout */}
-                        <button
-                          onClick={() => handleProductSelect(product)}
-                          className="ml-4 px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 text-sm font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center space-x-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          <span>Ajouter</span>
-                        </button>
-                      </div>
+                    {/* Titre et description */}
+                    <div className="mb-4">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors duration-200">
+                        {product.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                        {product.description}
+                      </p>
                     </div>
+                    
+                    {/* Prix */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-baseline space-x-1">
+                        <span className="text-2xl sm:text-3xl font-bold text-primary-600">
+                          {product.price.toLocaleString()}
+                        </span>
+                        <span className="text-sm font-medium text-gray-500">{product.currency}</span>
+                      </div>
+                      
+                      {product.id === 'complete-pack' && (
+                        <span className="text-sm text-gray-400 line-through">23,000 FCFA</span>
+                      )}
+                    </div>
+                    
+                    {/* Bouton d'ajout */}
+                    <button
+                      onClick={() => handleProductSelect(product)}
+                      className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 group-hover:scale-105"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Ajouter au panier</span>
+                    </button>
                   </div>
+                  
+                  {/* Effet de survol */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-primary-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 </div>
               ))}
             </div>
 
-            {/* Panier */}
+            {/* Panier moderne */}
             {selectedProducts.length > 0 && (
               <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-                  <ShoppingCart className="h-5 w-5 text-primary-500" />
-                  <span>Votre panier</span>
-                </h3>
-                <div className="space-y-3">
-                  {selectedProducts.map((item) => (
-                    <div key={item.productId} className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                      <div className="flex items-center space-x-3 flex-1">
-                        <div className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center">
-                          {getProductIcon(item.productId)}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{item.productName}</p>
-                          <p className="text-sm text-gray-600">{item.unitPrice.toLocaleString()} FCFA × {item.quantity}</p>
+                <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-2xl p-4 sm:p-6">
+                  <h3 className="font-bold text-gray-900 mb-4 flex items-center space-x-2">
+                    <ShoppingCart className="h-5 w-5 text-primary-600" />
+                    <span>Votre panier ({selectedProducts.length} article{selectedProducts.length > 1 ? 's' : ''})</span>
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {selectedProducts.map((item) => (
+                      <div key={item.productId} className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                              {getProductIcon(item.productId)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{item.productName}</p>
+                              <p className="text-xs sm:text-sm text-gray-600">{item.unitPrice.toLocaleString()} FCFA × {item.quantity}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2 sm:space-x-3">
+                            {/* Contrôles de quantité */}
+                            <div className="flex items-center space-x-1 sm:space-x-2">
+                              <button
+                                onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
+                                className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors duration-200"
+                              >
+                                <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </button>
+                              <span className="w-6 sm:w-8 text-center font-semibold text-gray-900 text-sm sm:text-base">{item.quantity}</span>
+                              <button
+                                onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
+                                className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors duration-200"
+                              >
+                                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </button>
+                            </div>
+                            
+                            {/* Prix total */}
+                            <span className="font-bold text-primary-600 text-sm sm:text-base min-w-[60px] sm:min-w-[80px] text-right">
+                              {item.totalPrice.toLocaleString()} FCFA
+                            </span>
+                            
+                            {/* Bouton supprimer */}
+                            <button
+                              onClick={() => handleProductRemove(item.productId)}
+                              className="p-1 sm:p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                            >
+                              <AlertCircle className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
-                            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors duration-200"
-                          >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <span className="w-8 text-center font-semibold text-gray-900">{item.quantity}</span>
-                          <button
-                            onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
-                            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors duration-200"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <span className="font-bold text-primary-600 min-w-[80px] text-right">{item.totalPrice.toLocaleString()} FCFA</span>
-                        <button
-                          onClick={() => handleProductRemove(item.productId)}
-                          className="ml-2 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                        >
-                          <AlertCircle className="h-4 w-4" />
-                        </button>
-                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Total */}
+                  <div className="mt-4 pt-4 border-t border-primary-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg sm:text-xl font-bold text-gray-900">Total:</span>
+                      <span className="text-xl sm:text-2xl font-bold text-primary-600">{calculateTotal().toLocaleString()} FCFA</span>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-gray-900">Total:</span>
-                    <span className="text-2xl font-bold text-primary-600">{calculateTotal().toLocaleString()} FCFA</span>
                   </div>
                 </div>
               </div>
@@ -349,7 +372,7 @@ export default function OrderProductsPage() {
           </div>
 
           {/* Formulaire de commande */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-sm p-6 border border-white/20">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-sm p-4 sm:p-6 border border-white/20">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
               <User className="h-5 w-5 text-primary-500" />
               <span>Informations de livraison</span>
@@ -357,7 +380,7 @@ export default function OrderProductsPage() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Informations personnelles */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
                   <input
@@ -431,7 +454,7 @@ export default function OrderProductsPage() {
                 <div className="space-y-4">
                   
                   {/* Paiement Wave Direct */}
-                  <div className="border-2 border-green-200 bg-green-50 rounded-xl p-4">
+                  <div className="border-2 border-green-200 bg-green-50 rounded-xl p-3 sm:p-4">
                     <div className="flex items-center space-x-3 mb-3">
                       <input
                         type="radio"
@@ -471,7 +494,7 @@ export default function OrderProductsPage() {
                   </div>
 
                   {/* Orange Money */}
-                  <div className="border border-orange-200 bg-orange-50 rounded-xl p-4">
+                  <div className="border border-orange-200 bg-orange-50 rounded-xl p-3 sm:p-4">
                     <div className="flex items-center space-x-3 mb-3">
                       <input
                         type="radio"
@@ -509,7 +532,7 @@ export default function OrderProductsPage() {
                   </div>
 
                   {/* Paiement à la livraison */}
-                  <div className="border border-gray-200 bg-gray-50 rounded-xl p-4">
+                  <div className="border border-gray-200 bg-gray-50 rounded-xl p-3 sm:p-4">
                     <div className="flex items-center space-x-3">
                       <input
                         type="radio"
@@ -547,17 +570,17 @@ export default function OrderProductsPage() {
               <button
                 type="submit"
                 disabled={selectedProducts.length === 0 || isSubmitting}
-                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Création de la commande...</span>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
+                    <span className="text-sm sm:text-base">Création de la commande...</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center space-x-2">
-                    <ShoppingCart className="h-5 w-5" />
-                    <span>Confirmer la commande ({calculateTotal().toLocaleString()} FCFA)</span>
+                    <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-sm sm:text-base">Confirmer la commande ({calculateTotal().toLocaleString()} FCFA)</span>
                   </div>
                 )}
               </button>
