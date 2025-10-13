@@ -4,10 +4,10 @@ import { collection, doc, increment, addDoc, getDoc, updateDoc, serverTimestamp 
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     // Récupérer les informations de la requête
     const userAgent = request.headers.get('user-agent') || 'Unknown';
@@ -68,10 +68,10 @@ export async function POST(
 // Méthode GET pour permettre les scans QR depuis des applications mobiles
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     // Récupérer les informations de la requête
     const userAgent = request.headers.get('user-agent') || 'Unknown';
