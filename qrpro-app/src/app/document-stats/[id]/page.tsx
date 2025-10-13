@@ -102,14 +102,44 @@ export default function DocumentStatsPage() {
 
   const formatDate = (timestamp: any) => {
     if (!timestamp) return 'Date inconnue';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    
+    try {
+      let date;
+      
+      // Gérer différents formats de timestamp
+      if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+        // Firebase Timestamp
+        date = timestamp.toDate();
+      } else if (timestamp.seconds) {
+        // Firebase Timestamp en format objet
+        date = new Date(timestamp.seconds * 1000);
+      } else if (typeof timestamp === 'string') {
+        // String ISO
+        date = new Date(timestamp);
+      } else if (typeof timestamp === 'number') {
+        // Timestamp Unix
+        date = new Date(timestamp);
+      } else {
+        // Essayer de convertir directement
+        date = new Date(timestamp);
+      }
+      
+      // Vérifier si la date est valide
+      if (isNaN(date.getTime())) {
+        return 'Date inconnue';
+      }
+      
+      return date.toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Erreur formatage date:', error, timestamp);
+      return 'Date inconnue';
+    }
   };
 
   const formatFileSize = (bytes: number) => {
