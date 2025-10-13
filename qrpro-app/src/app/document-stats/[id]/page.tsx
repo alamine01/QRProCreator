@@ -222,14 +222,14 @@ export default function DocumentStatsPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header moderne */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
             <div className="flex items-center space-x-4">
-              <div className="text-4xl">{getFileIcon(documentStats.mimeType || '')}</div>
+              <div className="text-3xl">{getFileIcon(documentStats.mimeType || '')}</div>
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 truncate">
                   {documentStats.name}
                 </h1>
-                <p className="text-blue-100 text-sm truncate">
+                <p className="text-orange-100 text-sm truncate">
                   {documentStats.originalName}
                 </p>
               </div>
@@ -241,7 +241,7 @@ export default function DocumentStatsPage() {
                 }`}>
                   {documentStats.classification === 'public' ? 'Public' : 'Confidentiel'}
                 </span>
-                <span className="text-blue-100 text-xs">
+                <span className="text-orange-100 text-xs">
                   📅 {formatDate(documentStats.uploadedAt)}
                 </span>
               </div>
@@ -254,8 +254,8 @@ export default function DocumentStatsPage() {
           {/* Total Downloads */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <Download className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                <Download className="h-5 w-5 text-white" />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{documentStats.downloadCount}</p>
@@ -263,15 +263,15 @@ export default function DocumentStatsPage() {
               </div>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full" style={{width: `${Math.min((documentStats.downloadCount / 10) * 100, 100)}%`}}></div>
+              <div className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full" style={{width: `${Math.min((documentStats.downloadCount / 10) * 100, 100)}%`}}></div>
             </div>
           </div>
 
           {/* QR Scans */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                <QrCode className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <QrCode className="h-5 w-5 text-white" />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{documentStats.qrScanCount || 0}</p>
@@ -279,15 +279,15 @@ export default function DocumentStatsPage() {
               </div>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full" style={{width: `${Math.min(((documentStats.qrScanCount || 0) / 5) * 100, 100)}%`}}></div>
+              <div className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full" style={{width: `${Math.min(((documentStats.qrScanCount || 0) / 5) * 100, 100)}%`}}></div>
             </div>
           </div>
 
           {/* Recent Downloads */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-white" />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">
@@ -302,7 +302,7 @@ export default function DocumentStatsPage() {
               </div>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full" style={{width: `${Math.min(((documentStats.downloads?.filter(d => {
+              <div className="h-full bg-gradient-to-r from-orange-600 to-orange-700 rounded-full" style={{width: `${Math.min(((documentStats.downloads?.filter(d => {
                 const downloadDate = d.timestamp?.toDate ? d.timestamp.toDate() : new Date(d.timestamp);
                 const weekAgo = new Date();
                 weekAgo.setDate(weekAgo.getDate() - 7);
@@ -314,8 +314,8 @@ export default function DocumentStatsPage() {
           {/* Last Download */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-300 to-orange-400 rounded-lg flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-white" />
               </div>
               <div className="text-right">
                 <p className="text-sm font-bold text-gray-900 truncate max-w-20">
@@ -328,15 +328,15 @@ export default function DocumentStatsPage() {
               </div>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full" style={{width: `${documentStats.downloads?.length > 0 ? 100 : 0}%`}}></div>
+              <div className="h-full bg-gradient-to-r from-orange-300 to-orange-400 rounded-full" style={{width: `${documentStats.downloads?.length > 0 ? 100 : 0}%`}}></div>
             </div>
           </div>
 
           {/* Owner */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                <User className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-700 to-orange-800 rounded-lg flex items-center justify-center">
+                <User className="h-5 w-5 text-white" />
               </div>
               <div className="text-right">
                 <p className="text-sm font-bold text-gray-900 truncate max-w-20">
@@ -346,7 +346,7 @@ export default function DocumentStatsPage() {
               </div>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full" style={{width: '100%'}}></div>
+              <div className="h-full bg-gradient-to-r from-orange-700 to-orange-800 rounded-full" style={{width: '100%'}}></div>
             </div>
           </div>
         </div>
@@ -355,7 +355,7 @@ export default function DocumentStatsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* QR Scans Timeline */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
               <h3 className="text-lg font-semibold text-white flex items-center">
                 <QrCode className="h-5 w-5 mr-2" />
                 Historique des Scans QR
@@ -365,9 +365,9 @@ export default function DocumentStatsPage() {
               {documentStats.qrScans && documentStats.qrScans.length > 0 ? (
                 <div className="space-y-4">
                   {documentStats.qrScans.map((scan, index) => (
-                    <div key={scan.id} className="flex items-center space-x-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                      <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <QrCode className="h-5 w-5 text-white" />
+                    <div key={scan.id} className="flex items-center space-x-4 p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <QrCode className="h-4 w-4 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900">Scan QR #{index + 1}</p>
@@ -386,8 +386,8 @@ export default function DocumentStatsPage() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <QrCode className="h-8 w-8 text-indigo-500" />
+                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <QrCode className="h-8 w-8 text-orange-500" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun scan QR</h3>
                   <p className="text-gray-500">Ce document n'a pas encore été scanné via QR code.</p>
@@ -398,7 +398,7 @@ export default function DocumentStatsPage() {
 
           {/* Downloads Timeline */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+            <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">
               <h3 className="text-lg font-semibold text-white flex items-center">
                 <Download className="h-5 w-5 mr-2" />
                 Historique des Téléchargements
@@ -408,9 +408,9 @@ export default function DocumentStatsPage() {
               {documentStats.downloads && documentStats.downloads.length > 0 ? (
                 <div className="space-y-4">
                   {documentStats.downloads.map((download, index) => (
-                    <div key={index} className="flex items-center space-x-4 p-4 bg-green-50 rounded-xl border border-green-100">
-                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Download className="h-5 w-5 text-white" />
+                    <div key={index} className="flex items-center space-x-4 p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Download className="h-4 w-4 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900">Téléchargement #{index + 1}</p>
@@ -426,8 +426,8 @@ export default function DocumentStatsPage() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Download className="h-8 w-8 text-green-500" />
+                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Download className="h-8 w-8 text-orange-500" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun téléchargement</h3>
                   <p className="text-gray-500">Ce document n'a pas encore été téléchargé.</p>
