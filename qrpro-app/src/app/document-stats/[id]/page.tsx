@@ -89,13 +89,11 @@ export default function DocumentStatsPage() {
   useEffect(() => {
     if (urlEmail) {
       setInputEmail(urlEmail);
-      // Si l'email est dans l'URL, vérifier automatiquement (cas où on revient sur la page)
-      verifyEmail(urlEmail);
-    } else {
-      // Pas d'email dans l'URL, arrêter le loading pour afficher le formulaire
-      setLoading(false);
+      // Pré-remplir le champ email mais ne pas vérifier automatiquement
     }
-  }, [urlEmail, verifyEmail]);
+    // Toujours arrêter le loading pour afficher le formulaire
+    setLoading(false);
+  }, [urlEmail]);
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
