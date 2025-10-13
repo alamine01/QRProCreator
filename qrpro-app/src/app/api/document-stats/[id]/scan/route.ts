@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, doc, increment, addDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, increment, addDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 export async function POST(
   request: NextRequest,
@@ -36,7 +36,7 @@ export async function POST(
     }
 
     // Incrémenter le compteur de scans QR
-    await doc(db, 'documents', id).update({
+    await updateDoc(doc(db, 'documents', id), {
       qrScanCount: increment(1)
     });
 
@@ -98,7 +98,7 @@ export async function GET(
     }
 
     // Incrémenter le compteur de scans QR
-    await doc(db, 'documents', id).update({
+    await updateDoc(doc(db, 'documents', id), {
       qrScanCount: increment(1)
     });
 
