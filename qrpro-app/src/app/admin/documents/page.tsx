@@ -448,7 +448,7 @@ export default function AdminDocumentsPage() {
 
         {/* Search and Filter */}
         <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6">
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -506,85 +506,91 @@ export default function AdminDocumentsPage() {
             <div className="divide-y divide-gray-200">
               {filteredDocuments.map((document) => (
                 <div key={document.id} className="p-3 sm:p-4 lg:p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                    <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                  <div className="flex flex-col gap-3 sm:gap-4">
+                    {/* Header avec icône et titre */}
+                    <div className="flex items-start space-x-3 sm:space-x-4 min-w-0">
                       <div className="text-xl sm:text-2xl flex-shrink-0">{getFileIcon(document.mimeType)}</div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm sm:text-base font-medium text-gray-900 truncate">
+                      <div className="flex-1 min-w-0 overflow-hidden" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
+                        <h4 className="text-sm sm:text-base font-medium text-gray-900 leading-tight" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
                           {document.name}
                         </h4>
-                        <p className="text-xs sm:text-sm text-gray-500 truncate">
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
                           {document.originalName} • {formatFileSize(document.fileSize)}
                         </p>
                         {document.temporary && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mt-2">
                             ⚠️ Document temporaire
                           </span>
                         )}
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-2 sm:mt-1">
-                          <span className="text-xs text-gray-400">
-                            📅 {formatDate(document.uploadedAt)}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            📊 {document.downloadCount || 0} téléchargements
-                          </span>
-                          <span className={`text-xs px-2 py-1 rounded-full w-fit ${
-                            document.isActive 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {document.isActive ? 'Actif' : 'Inactif'}
-                          </span>
-                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center justify-end sm:justify-start space-x-1 sm:space-x-2 flex-shrink-0">
-                      <button
-                        onClick={() => {
-                          setSelectedDocument(document);
-                          setShowDetailModal(true);
-                        }}
-                        className="p-2 sm:p-2.5 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
-                        title="Voir les détails"
-                      >
-                        <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </button>
+
+                    {/* Informations et statut */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 min-w-0">
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                          📅 {formatDate(document.uploadedAt)}
+                        </span>
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                          📊 {document.downloadCount || 0} téléchargements
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full w-fit flex-shrink-0 ${
+                          document.isActive 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {document.isActive ? 'Actif' : 'Inactif'}
+                        </span>
+                      </div>
                       
-                      <button
-                        onClick={() => handleDownloadQRCode(document)}
-                        className="p-2 sm:p-2.5 text-gray-400 hover:text-purple-600 transition-colors rounded-lg hover:bg-purple-50"
-                        title="Télécharger QR Code"
-                      >
-                        <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          const directUrl = getDirectFileUrl(document);
-                          if (!directUrl) {
-                            alert('Document temporaire - non accessible publiquement');
-                            return;
-                          }
-                          window.open(directUrl, '_blank');
-                        }}
-                        className={`p-2 sm:p-2.5 transition-colors rounded-lg ${
-                          document.temporary 
-                            ? 'text-gray-300 cursor-not-allowed' 
-                            : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
-                        }`}
-                        title={document.temporary ? 'Document temporaire - non accessible publiquement' : 'Ouvrir le document directement'}
-                      >
-                        <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </button>
-                      
-                      <button
-                        onClick={() => handleDeleteDocument(document.id)}
-                        className="p-2 sm:p-2.5 text-gray-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50"
-                        title="Supprimer"
-                      >
-                        <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </button>
+                      {/* Actions */}
+                      <div className="flex items-center justify-end space-x-1 sm:space-x-2 flex-shrink-0">
+                        <button
+                          onClick={() => {
+                            setSelectedDocument(document);
+                            setShowDetailModal(true);
+                          }}
+                          className="p-2 sm:p-2.5 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
+                          title="Voir les détails"
+                        >
+                          <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </button>
+                        
+                        <button
+                          onClick={() => handleDownloadQRCode(document)}
+                          className="p-2 sm:p-2.5 text-gray-400 hover:text-purple-600 transition-colors rounded-lg hover:bg-purple-50"
+                          title="Télécharger QR Code"
+                        >
+                          <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            const directUrl = getDirectFileUrl(document);
+                            if (!directUrl) {
+                              alert('Document temporaire - non accessible publiquement');
+                              return;
+                            }
+                            window.open(directUrl, '_blank');
+                          }}
+                          className={`p-2 sm:p-2.5 transition-colors rounded-lg ${
+                            document.temporary 
+                              ? 'text-gray-300 cursor-not-allowed' 
+                              : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                          }`}
+                          title={document.temporary ? 'Document temporaire - non accessible publiquement' : 'Ouvrir le document directement'}
+                        >
+                          <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </button>
+                        
+                        <button
+                          onClick={() => handleDeleteDocument(document.id)}
+                          className="p-2 sm:p-2.5 text-gray-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
