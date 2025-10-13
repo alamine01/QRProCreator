@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { 
   Download, 
@@ -56,14 +56,7 @@ export default function DocumentStatsPage() {
   const documentId = params?.id as string;
   const urlEmail = searchParams?.get('email');
 
-  useEffect(() => {
-    if (urlEmail) {
-      setInputEmail(urlEmail);
-      verifyEmail(urlEmail);
-    }
-  }, [urlEmail]);
-
-  const verifyEmail = async (email: string) => {
+  const verifyEmail = useCallback(async (email: string) => {
     if (!email || !documentId) return;
     
     setVerifying(true);
@@ -75,6 +68,10 @@ export default function DocumentStatsPage() {
         setDocumentStats(data);
         setEmailVerified(true);
         setError(null);
+        
+        // Rediriger vers la même page avec l'email dans l'URL pour éviter de redemander
+        const newUrl = `/document-stats/${documentId}?email=${encodeURIComponent(email)}`;
+        window.history.replaceState({}, '', newUrl);
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Erreur de vérification');
@@ -87,7 +84,18 @@ export default function DocumentStatsPage() {
       setVerifying(false);
       setLoading(false);
     }
-  };
+  }, [documentId]);
+
+  useEffect(() => {
+    if (urlEmail) {
+      setInputEmail(urlEmail);
+      // Si l'email est dans l'URL, vérifier automatiquement (cas où on revient sur la page)
+      verifyEmail(urlEmail);
+    } else {
+      // Pas d'email dans l'URL, arrêter le loading pour afficher le formulaire
+      setLoading(false);
+    }
+  }, [urlEmail, verifyEmail]);
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
