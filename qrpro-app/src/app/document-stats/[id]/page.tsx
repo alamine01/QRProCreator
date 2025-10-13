@@ -25,6 +25,7 @@ interface DocumentStats {
   statsTrackingEnabled: boolean;
   downloadCount: number;
   uploadedAt: any;
+  mimeType?: string;
   downloads: Array<{
     timestamp: any;
     userAgent?: string;
@@ -125,33 +126,33 @@ export default function DocumentStatsPage() {
 
   if (!emailVerified) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="h-8 w-8 text-blue-600" />
+          <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
+            <div className="text-center mb-4 sm:mb-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2">
                 Statistiques du Document
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Entrez votre adresse email pour consulter les statistiques
               </p>
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="mb-3 sm:mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center">
-                  <AlertCircle className="h-4 w-4 text-red-500 mr-2" />
-                  <p className="text-sm text-red-700">{error}</p>
+                  <AlertCircle className="h-4 w-4 text-red-500 mr-2 flex-shrink-0" />
+                  <p className="text-xs sm:text-sm text-red-700 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>{error}</p>
                 </div>
               </div>
             )}
 
-            <form onSubmit={handleEmailSubmit} className="space-y-4">
+            <form onSubmit={handleEmailSubmit} className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   Adresse email
                 </label>
                 <input
@@ -167,16 +168,16 @@ export default function DocumentStatsPage() {
               <button
                 type="submit"
                 disabled={verifying || !inputEmail}
-                className="w-full px-4 py-2 sm:py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
+                className="w-full px-4 py-2 sm:py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs sm:text-sm lg:text-base"
               >
                 {verifying ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin" />
                     Vérification...
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                     Consulter les statistiques
                   </>
                 )}
@@ -204,25 +205,25 @@ export default function DocumentStatsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="text-4xl">{getFileIcon(documentStats.mimeType || '')}</div>
-            <div className="flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+            <div className="text-3xl sm:text-4xl flex-shrink-0">{getFileIcon(documentStats.mimeType || '')}</div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                 {documentStats.name}
               </h1>
-              <p className="text-sm text-gray-500 mb-2">
+              <p className="text-xs sm:text-sm text-gray-500 mb-2 break-words" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
                 {documentStats.originalName}
               </p>
-              <div className="flex items-center space-x-4">
-                <span className={`text-xs px-2 py-1 rounded-full ${
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <span className={`text-xs px-2 py-1 rounded-full w-fit ${
                   documentStats.classification === 'public'
                     ? 'bg-blue-100 text-blue-800' 
                     : 'bg-orange-100 text-orange-800'
                 }`}>
                   {documentStats.classification === 'public' ? 'Public' : 'Confidentiel'}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 whitespace-nowrap">
                   📅 Uploadé le {formatDate(documentStats.uploadedAt)}
                 </span>
               </div>
@@ -231,27 +232,27 @@ export default function DocumentStatsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Download className="h-5 w-5 text-blue-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Download className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-500">Total Téléchargements</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-900">{documentStats.downloadCount}</p>
+                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{documentStats.downloadCount}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-green-600" />
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-500">Téléchargements Récents</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-900">
+                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">
                   {documentStats.downloads?.filter(d => {
                     const downloadDate = d.timestamp?.toDate ? d.timestamp.toDate() : new Date(d.timestamp);
                     const weekAgo = new Date();
@@ -263,14 +264,14 @@ export default function DocumentStatsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-purple-600" />
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-500">Dernier Téléchargement</p>
-                <p className="text-sm font-bold text-gray-900">
+                <p className="text-xs sm:text-sm font-bold text-gray-900 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                   {documentStats.downloads?.length > 0 
                     ? formatDate(documentStats.downloads[documentStats.downloads.length - 1].timestamp)
                     : 'Aucun'
@@ -280,14 +281,14 @@ export default function DocumentStatsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <User className="h-5 w-5 text-orange-600" />
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-500">Propriétaire</p>
-                <p className="text-sm font-bold text-gray-900 truncate">{documentStats.ownerEmail}</p>
+                <p className="text-xs sm:text-sm font-bold text-gray-900 break-words" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>{documentStats.ownerEmail}</p>
               </div>
             </div>
           </div>
@@ -295,27 +296,27 @@ export default function DocumentStatsPage() {
 
         {/* Downloads Timeline */}
         <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Historique des Téléchargements</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Historique des Téléchargements</h3>
           
           {documentStats.downloads && documentStats.downloads.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {documentStats.downloads.map((download, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <Download className="h-4 w-4 text-green-600" />
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg gap-2 sm:gap-0">
+                  <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">
                         Téléchargement #{index + 1}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 whitespace-nowrap">
                         {formatDate(download.timestamp)}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500">
+                  <div className="text-left sm:text-right">
+                    <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                       {download.userAgent ? download.userAgent.split(' ')[0] : 'Appareil inconnu'}
                     </p>
                   </div>
@@ -323,10 +324,10 @@ export default function DocumentStatsPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Download className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun téléchargement</h3>
-              <p className="text-gray-500">Ce document n'a pas encore été téléchargé.</p>
+            <div className="text-center py-6 sm:py-8">
+              <Download className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun téléchargement</h3>
+              <p className="text-sm sm:text-base text-gray-500">Ce document n'a pas encore été téléchargé.</p>
             </div>
           )}
         </div>
