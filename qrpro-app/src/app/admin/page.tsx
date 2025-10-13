@@ -342,25 +342,25 @@ export default function AdminDashboard() {
               ) : (
                 <div className="space-y-4">
                   {recentDocuments?.map((document) => (
-                    <div key={document.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
+                    <div key={document.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg min-w-0">
+                      <div className="flex items-start min-w-0 flex-1">
                         <div className="flex-shrink-0 mr-3">
                           <FaFileUpload className="w-5 h-5 text-orange-600" />
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900 truncate">
+                        <div className="min-w-0 flex-1 overflow-hidden">
+                          <p className="font-medium text-gray-900 text-sm leading-tight" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
                             {document.name}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-xs text-gray-500 mt-1" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
                             {document.originalName}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span className="text-sm font-medium text-gray-900">
+                      <div className="text-right flex-shrink-0 ml-3">
+                        <span className="text-xs font-medium text-gray-900 whitespace-nowrap">
                           {document.downloadCount} téléchargements
                         </span>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 whitespace-nowrap">
                           {new Date(document.uploadedAt?.toDate?.() || document.uploadedAt).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
