@@ -218,69 +218,79 @@ export default function DocumentStatsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-4 sm:py-6 lg:py-8 px-3 sm:px-4 lg:px-6 xl:px-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
-            <div className="text-3xl sm:text-4xl flex-shrink-0">{getFileIcon(documentStats.mimeType || '')}</div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-1 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
-                {documentStats.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-500 mb-3 break-words" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
-                {documentStats.originalName}
-              </p>
-              <div className="flex flex-col xs:flex-row xs:items-center space-y-2 xs:space-y-0 xs:space-x-3">
-                <span className={`text-xs px-2 py-1 rounded-full w-fit ${
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Header moderne */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">{getFileIcon(documentStats.mimeType || '')}</div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 truncate">
+                  {documentStats.name}
+                </h1>
+                <p className="text-blue-100 text-sm truncate">
+                  {documentStats.originalName}
+                </p>
+              </div>
+              <div className="flex flex-col items-end space-y-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                   documentStats.classification === 'public'
-                    ? 'bg-blue-100 text-blue-800' 
-                    : 'bg-orange-100 text-orange-800'
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-yellow-100 text-yellow-800'
                 }`}>
                   {documentStats.classification === 'public' ? 'Public' : 'Confidentiel'}
                 </span>
-                <span className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
-                  📅 Uploadé le {formatDate(documentStats.uploadedAt)}
+                <span className="text-blue-100 text-xs">
+                  📅 {formatDate(documentStats.uploadedAt)}
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Download className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+        {/* Stats Cards modernes */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+          {/* Total Downloads */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                <Download className="h-6 w-6 text-white" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500">Total Téléchargements</p>
-                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{documentStats.downloadCount}</p>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-gray-900">{documentStats.downloadCount}</p>
+                <p className="text-sm text-gray-500">Téléchargements</p>
               </div>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full" style={{width: `${Math.min((documentStats.downloadCount / 10) * 100, 100)}%`}}></div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <QrCode className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+          {/* QR Scans */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <QrCode className="h-6 w-6 text-white" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500">Scans QR Code</p>
-                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{documentStats.qrScanCount || 0}</p>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-gray-900">{documentStats.qrScanCount || 0}</p>
+                <p className="text-sm text-gray-500">Scans QR</p>
               </div>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full" style={{width: `${Math.min(((documentStats.qrScanCount || 0) / 5) * 100, 100)}%`}}></div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+          {/* Recent Downloads */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-white" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500">Téléchargements Récents</p>
-                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">
+              <div className="text-right">
+                <p className="text-2xl font-bold text-gray-900">
                   {documentStats.downloads?.filter(d => {
                     const downloadDate = d.timestamp?.toDate ? d.timestamp.toDate() : new Date(d.timestamp);
                     const weekAgo = new Date();
@@ -288,119 +298,143 @@ export default function DocumentStatsPage() {
                     return downloadDate > weekAgo;
                   }).length || 0}
                 </p>
+                <p className="text-sm text-gray-500">Cette semaine</p>
               </div>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full" style={{width: `${Math.min(((documentStats.downloads?.filter(d => {
+                const downloadDate = d.timestamp?.toDate ? d.timestamp.toDate() : new Date(d.timestamp);
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return downloadDate > weekAgo;
+              }).length || 0) / 3) * 100, 100)}%`}}></div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+          {/* Last Download */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-white" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500">Dernier Téléchargement</p>
-                <p className="text-xs sm:text-sm font-bold text-gray-900 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
+              <div className="text-right">
+                <p className="text-sm font-bold text-gray-900 truncate max-w-20">
                   {documentStats.downloads?.length > 0 
-                    ? formatDate(documentStats.downloads[documentStats.downloads.length - 1].timestamp)
+                    ? formatDate(documentStats.downloads[documentStats.downloads.length - 1].timestamp).split(' ')[0]
                     : 'Aucun'
                   }
                 </p>
+                <p className="text-sm text-gray-500">Dernier</p>
               </div>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full" style={{width: `${documentStats.downloads?.length > 0 ? 100 : 0}%`}}></div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <User className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+          {/* Owner */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <User className="h-6 w-6 text-white" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500">Propriétaire</p>
-                <p className="text-xs sm:text-sm font-bold text-gray-900 break-words" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>{documentStats.ownerEmail}</p>
+              <div className="text-right">
+                <p className="text-sm font-bold text-gray-900 truncate max-w-20">
+                  {documentStats.ownerEmail.split('@')[0]}
+                </p>
+                <p className="text-sm text-gray-500">Propriétaire</p>
               </div>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full" style={{width: '100%'}}></div>
             </div>
           </div>
         </div>
 
-        {/* QR Scans Timeline */}
-        <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6">
-          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Historique des Scans QR</h3>
-          
-          {documentStats.qrScans && documentStats.qrScans.length > 0 ? (
-            <div className="space-y-2 sm:space-y-3">
-              {documentStats.qrScans.map((scan, index) => (
-                <div key={scan.id} className="flex flex-col xs:flex-row xs:items-center xs:justify-between p-3 bg-indigo-50 rounded-lg gap-2 xs:gap-0">
-                  <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <QrCode className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-600" />
+        {/* Sections Timeline modernes */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* QR Scans Timeline */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4">
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <QrCode className="h-5 w-5 mr-2" />
+                Historique des Scans QR
+              </h3>
+            </div>
+            <div className="p-6">
+              {documentStats.qrScans && documentStats.qrScans.length > 0 ? (
+                <div className="space-y-4">
+                  {documentStats.qrScans.map((scan, index) => (
+                    <div key={scan.id} className="flex items-center space-x-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                      <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <QrCode className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900">Scan QR #{index + 1}</p>
+                        <p className="text-sm text-gray-500">{formatDate(scan.timestamp)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600 truncate max-w-24">
+                          {scan.userAgent ? scan.userAgent.split(' ')[0] : 'Inconnu'}
+                        </p>
+                        {scan.ip && (
+                          <p className="text-xs text-gray-400">IP: {scan.ip}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs sm:text-sm font-medium text-gray-900">
-                        Scan QR #{index + 1}
-                      </p>
-                      <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
-                        {formatDate(scan.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-left xs:text-right">
-                    <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
-                      {scan.userAgent ? scan.userAgent.split(' ')[0] : 'Appareil inconnu'}
-                    </p>
-                    {scan.ip && (
-                      <p className="text-xs text-gray-400 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
-                        IP: {scan.ip}
-                      </p>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <QrCode className="h-8 w-8 text-indigo-500" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun scan QR</h3>
+                  <p className="text-gray-500">Ce document n'a pas encore été scanné via QR code.</p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-6 sm:py-8">
-              <QrCode className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-              <h3 className="text-sm sm:text-base md:text-lg font-medium text-gray-900 mb-2">Aucun scan QR</h3>
-              <p className="text-xs sm:text-sm md:text-base text-gray-500">Ce document n'a pas encore été scanné via QR code.</p>
-            </div>
-          )}
-        </div>
+          </div>
 
-        {/* Downloads Timeline */}
-        <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 lg:p-6">
-          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Historique des Téléchargements</h3>
-          
-          {documentStats.downloads && documentStats.downloads.length > 0 ? (
-            <div className="space-y-2 sm:space-y-3">
-              {documentStats.downloads.map((download, index) => (
-                <div key={index} className="flex flex-col xs:flex-row xs:items-center xs:justify-between p-3 bg-gray-50 rounded-lg gap-2 xs:gap-0">
-                  <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+          {/* Downloads Timeline */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <Download className="h-5 w-5 mr-2" />
+                Historique des Téléchargements
+              </h3>
+            </div>
+            <div className="p-6">
+              {documentStats.downloads && documentStats.downloads.length > 0 ? (
+                <div className="space-y-4">
+                  {documentStats.downloads.map((download, index) => (
+                    <div key={index} className="flex items-center space-x-4 p-4 bg-green-50 rounded-xl border border-green-100">
+                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Download className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900">Téléchargement #{index + 1}</p>
+                        <p className="text-sm text-gray-500">{formatDate(download.timestamp)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600 truncate max-w-24">
+                          {download.userAgent ? download.userAgent.split(' ')[0] : 'Inconnu'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs sm:text-sm font-medium text-gray-900">
-                        Téléchargement #{index + 1}
-                      </p>
-                      <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
-                        {formatDate(download.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-left xs:text-right">
-                    <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
-                      {download.userAgent ? download.userAgent.split(' ')[0] : 'Appareil inconnu'}
-                    </p>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Download className="h-8 w-8 text-green-500" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun téléchargement</h3>
+                  <p className="text-gray-500">Ce document n'a pas encore été téléchargé.</p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-6 sm:py-8">
-              <Download className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-              <h3 className="text-sm sm:text-base md:text-lg font-medium text-gray-900 mb-2">Aucun téléchargement</h3>
-              <p className="text-xs sm:text-sm md:text-base text-gray-500">Ce document n'a pas encore été téléchargé.</p>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
