@@ -361,7 +361,22 @@ export default function AdminDashboard() {
                           {document.downloadCount} téléchargements
                         </span>
                         <p className="text-xs text-gray-500 whitespace-nowrap">
-                          {new Date(document.uploadedAt?.toDate?.() || document.uploadedAt).toLocaleDateString('fr-FR')}
+                          {(() => {
+                            try {
+                              // Si c'est un Timestamp Firebase
+                              if (document.uploadedAt?.toDate) {
+                                return document.uploadedAt.toDate().toLocaleDateString('fr-FR');
+                              }
+                              // Si c'est déjà une date ou un timestamp
+                              if (document.uploadedAt) {
+                                return new Date(document.uploadedAt).toLocaleDateString('fr-FR');
+                              }
+                              return 'N/A';
+                            } catch (error) {
+                              console.error('Erreur formatage date:', error, document.uploadedAt);
+                              return 'N/A';
+                            }
+                          })()}
                         </p>
                       </div>
                     </div>
