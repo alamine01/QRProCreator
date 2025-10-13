@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AdminNavigation } from '@/components/layout/AdminNavigation';
+import { generateQRCode } from '@/lib/qrcode';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
 import { 
   FaPlus, 
   FaEdit, 
@@ -16,6 +19,7 @@ import {
   FaPhone,
   FaEnvelope,
   FaMapMarkerAlt,
+  FaMap,
   FaInstagram,
   FaWhatsapp,
   FaTwitter,
@@ -43,6 +47,9 @@ export default function BusinessCardsManagement() {
   const [editingCard, setEditingCard] = useState<BusinessCard | null>(null);
   const [formData, setFormData] = useState<Partial<BusinessCard>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [lastUpdatedCardId, setLastUpdatedCardId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !user.isAdmin)) {
@@ -67,13 +74,35 @@ export default function BusinessCardsManagement() {
   const fetchBusinessCards = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/business-cards');
+      console.log('🔄 Chargement des cartes de visite...');
+      
+      // Ajouter un paramètre de cache busting
+      const timestamp = Date.now();
+      const response = await fetch(`/api/admin/business-cards?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
-        setBusinessCards(data);
+        console.log('✅ Cartes chargées:', data.length, 'cartes');
+        
+        // Nettoyer les URLs blob invalides
+        const cleanedData = data.map((card: any) => {
+          if (card.photoPath && card.photoPath.startsWith('blob:')) {
+            return { ...card, photoPath: '' };
+          }
+          return card;
+        });
+        
+        setBusinessCards(cleanedData);
+      } else {
+        console.error('❌ Erreur HTTP:', response.status);
       }
     } catch (error) {
-      console.error('Error fetching business cards:', error);
+      console.error('❌ Erreur lors du chargement:', error);
     } finally {
       setIsLoading(false);
     }
@@ -90,9 +119,10 @@ export default function BusinessCardsManagement() {
       phonePrimary: '',
       phoneSecondary: '',
       email: '',
-      location: '',
-      address: '',
-      photoPath: '',
+        location: '',
+        address: '',
+        mapsLink: '',
+        photoPath: '',
       qrCodePath: '',
       isActive: true,
       instagram: '',
@@ -110,7 +140,59 @@ export default function BusinessCardsManagement() {
   const handleEditCard = (card: BusinessCard) => {
     setEditingCard(card);
     setFormData(card);
+    setSelectedPhotoFile(null); // Reset photo file
     setShowModal(true);
+  };
+
+  const handlePhotoUpload = async (file: File) => {
+    try {
+      setIsUploadingPhoto(true);
+      console.log('📸 Upload de la photo:', file.name);
+      
+      // Initialiser Firebase Storage
+      const storage = getStorage();
+      
+      // Générer un nom de fichier unique
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `profile_${timestamp}_${randomString}.${fileExtension}`;
+
+      // Upload vers Firebase Storage
+      const storageRef = ref(storage, `profile-photos/${fileName}`);
+      const uploadResult = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(uploadResult.ref);
+      
+      console.log('✅ Photo uploadée:', downloadURL);
+      
+      return downloadURL;
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'upload de la photo:', error);
+      alert('Erreur lors de l\'upload de la photo');
+      throw error;
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  // Fonction pour supprimer l'ancienne image
+  const deleteOldPhoto = async (photoUrl: string) => {
+    try {
+      if (photoUrl && photoUrl.startsWith('https://firebasestorage.googleapis.com/')) {
+        const storage = getStorage();
+        // Extraire le chemin du fichier depuis l'URL
+        const urlParts = photoUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1].split('?')[0];
+        const filePath = `profile-photos/${fileName}`;
+        
+        const oldPhotoRef = ref(storage, filePath);
+        await deleteObject(oldPhotoRef);
+        console.log('🗑️ Ancienne photo supprimée:', filePath);
+      }
+    } catch (error) {
+      console.log('⚠️ Impossible de supprimer l\'ancienne photo:', error);
+      // Ne pas bloquer le processus si la suppression échoue
+    }
   };
 
   const handleSaveCard = async () => {
@@ -133,30 +215,71 @@ export default function BusinessCardsManagement() {
 
     try {
       setIsSaving(true);
+      
+      // Si une photo a été sélectionnée mais pas encore uploadée, uploader maintenant
+      let finalFormData = { ...formData };
+      if (selectedPhotoFile && formData.photoPath?.startsWith('blob:')) {
+        console.log('📸 Upload de la photo avant sauvegarde...');
+        
+        // Supprimer l'ancienne photo si elle existe
+        if (editingCard && editingCard.photoPath && editingCard.photoPath.startsWith('https://firebasestorage.googleapis.com/')) {
+          console.log('🗑️ Suppression de l\'ancienne photo...');
+          await deleteOldPhoto(editingCard.photoPath);
+        }
+        
+        try {
+          const photoUrl = await handlePhotoUpload(selectedPhotoFile);
+          finalFormData.photoPath = photoUrl;
+          console.log('✅ Photo uploadée et intégrée:', photoUrl);
+        } catch (error) {
+          console.error('❌ Erreur upload photo:', error);
+          alert('Erreur lors de l\'upload de la photo. Veuillez réessayer.');
+          return;
+        }
+      } else if (formData.photoPath?.startsWith('blob:')) {
+        console.log('⚠️ URL blob détectée mais pas de fichier sélectionné');
+        // Supprimer l'URL blob invalide
+        finalFormData.photoPath = '';
+      }
+      
       const url = editingCard 
         ? `/api/admin/business-cards/${editingCard.id}` 
         : '/api/admin/business-cards';
       const method = editingCard ? 'PUT' : 'POST';
 
+      console.log('💾 Sauvegarde de la carte:', finalFormData);
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(finalFormData),
       });
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Carte sauvegardée:', result);
+        console.log('✅ Carte sauvegardée:', result);
         
-        // Actualiser la liste des cartes
-        await fetchBusinessCards();
+        // Mise à jour locale immédiate
+        if (editingCard) {
+          // Mise à jour d'une carte existante
+          setBusinessCards(prev => 
+            prev.map(card => card.id === editingCard.id ? result : card)
+          );
+          console.log('🔄 Carte mise à jour localement');
+          setLastUpdatedCardId(editingCard.id);
+        } else {
+          // Création d'une nouvelle carte
+          setBusinessCards(prev => [result, ...prev]);
+          console.log('🔄 Nouvelle carte ajoutée localement');
+          setLastUpdatedCardId(result.id);
+        }
         
         // Fermer le modal et réinitialiser le formulaire
         setShowModal(false);
         setFormData({});
         setEditingCard(null);
+        setSelectedPhotoFile(null);
         
         // Message de succès
         alert(editingCard ? 'Carte mise à jour avec succès!' : 'Carte créée avec succès!');
@@ -185,13 +308,24 @@ export default function BusinessCardsManagement() {
     }
 
     try {
+      // Trouver la carte à supprimer pour récupérer l'URL de la photo
+      const cardToDelete = businessCards.find(card => card.id === id);
+      
+      // Supprimer la photo de profil si elle existe
+      if (cardToDelete && cardToDelete.photoPath && cardToDelete.photoPath.startsWith('https://firebasestorage.googleapis.com/')) {
+        console.log('🗑️ Suppression de la photo de profil...');
+        await deleteOldPhoto(cardToDelete.photoPath);
+      }
+
       const response = await fetch(`/api/admin/business-cards/${id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        // Actualiser la liste des cartes
-        await fetchBusinessCards();
+        // Mise à jour locale immédiate
+        setBusinessCards(prev => prev.filter(card => card.id !== id));
+        console.log('🗑️ Carte supprimée localement');
+        
         alert('Carte supprimée avec succès!');
       } else {
         const errorData = await response.json();
@@ -296,7 +430,9 @@ export default function BusinessCardsManagement() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCards.map((card) => (
-              <div key={card.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div key={card.id} className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-500 ${
+                lastUpdatedCardId === card.id ? 'ring-2 ring-green-400 bg-green-50' : ''
+              }`}>
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center">
@@ -305,6 +441,13 @@ export default function BusinessCardsManagement() {
                           src={card.photoPath}
                           alt={card.name}
                           className="w-12 h-12 rounded-full object-cover"
+                          onError={(e) => {
+                            console.error('❌ Erreur chargement image:', card.photoPath);
+                            console.error('❌ Carte:', card.name, card.id);
+                          }}
+                          onLoad={() => {
+                            console.log('✅ Image chargée:', card.photoPath);
+                          }}
                         />
                       ) : (
                         <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
@@ -351,6 +494,19 @@ export default function BusinessCardsManagement() {
                       <div className="flex items-center text-sm text-gray-600">
                         <FaMapMarkerAlt className="mr-2 text-gray-400" />
                         {card.location}
+                      </div>
+                    )}
+                    {card.mapsLink && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <FaMap className="mr-2 text-gray-400" />
+                        <a 
+                          href={card.mapsLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          Voir sur Maps
+                        </a>
                       </div>
                     )}
                   </div>
@@ -553,6 +709,21 @@ export default function BusinessCardsManagement() {
                         required
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Lien Google Maps
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.mapsLink || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, mapsLink: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F15A22] focus:border-transparent"
+                        placeholder="https://maps.google.com/..."
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        💡 Copiez le lien "Partager" depuis Google Maps pour permettre la navigation
+                      </p>
+                    </div>
                   </div>
 
                   <div className="mt-4">
@@ -619,10 +790,28 @@ export default function BusinessCardsManagement() {
                             type="file"
                             className="sr-only"
                             accept="image/*"
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               const file = e.target.files?.[0];
                               if (file) {
+                                // Vérifier la taille du fichier (10MB max)
+                                const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+                                if (file.size > maxSize) {
+                                  alert('Le fichier est trop volumineux. Taille maximale autorisée: 10MB');
+                                  return;
+                                }
+
+                                // Vérifier le type de fichier
+                                if (!file.type.startsWith('image/')) {
+                                  alert('Veuillez sélectionner un fichier image valide');
+                                  return;
+                                }
+
+                                setSelectedPhotoFile(file);
+                                
+                                // Afficher un aperçu local immédiatement
                                 setFormData(prev => ({ ...prev, photoPath: URL.createObjectURL(file) }));
+                                
+                                // L'upload vers Firebase Storage se fera au moment de la sauvegarde
                               }
                             }}
                           />
@@ -630,6 +819,12 @@ export default function BusinessCardsManagement() {
                         <p className="pl-1">ou glisser-déposer</p>
                       </div>
                       <p className="text-xs text-gray-500">PNG, JPG jusqu'à 10MB</p>
+                      {isUploadingPhoto && (
+                        <div className="mt-2 flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#F15A22]"></div>
+                          <span className="ml-2 text-xs text-gray-500">Upload en cours...</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {formData.photoPath && (

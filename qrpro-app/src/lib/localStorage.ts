@@ -1,56 +1,63 @@
-// Système de stockage local temporaire pour les documents
-// Ceci est une solution temporaire en attendant que Firebase Storage soit configuré
+// Système de stockage local pour les documents
+import fs from 'fs';
+import path from 'path';
 
-interface LocalDocument {
-  id: string;
-  name: string;
-  originalName: string;
-  fileType: string;
-  fileSize: number;
-  filePath: string;
-  publicUrl: string;
-  qrCodePath?: string;
-  uploadedBy: string;
-  uploadedAt: string;
-  isActive: boolean;
-  downloadCount: number;
-  description?: string;
-  mimeType: string;
-  fileData?: string; // Base64 encoded file data
+const DOCUMENTS_FILE = path.join(process.cwd(), 'data', 'documents.json');
+
+// Créer le dossier data s'il n'existe pas
+const dataDir = path.join(process.cwd(), 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// Stockage en mémoire (sera perdu au redémarrage du serveur)
-let localDocuments: LocalDocument[] = [];
+// Initialiser le fichier s'il n'existe pas
+if (!fs.existsSync(DOCUMENTS_FILE)) {
+  fs.writeFileSync(DOCUMENTS_FILE, JSON.stringify([]));
+}
 
-export const saveDocumentLocally = (document: LocalDocument): string => {
-  const id = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  const documentWithId = { ...document, id };
-  localDocuments.push(documentWithId);
-  return id;
-};
-
-export const getAllLocalDocuments = (): LocalDocument[] => {
-  return localDocuments.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
-};
-
-export const getLocalDocumentById = (id: string): LocalDocument | null => {
-  return localDocuments.find(doc => doc.id === id) || null;
-};
-
-export const deleteLocalDocument = (id: string): boolean => {
-  const index = localDocuments.findIndex(doc => doc.id === id);
-  if (index !== -1) {
-    localDocuments.splice(index, 1);
-    return true;
+export function getAllLocalDocuments() {
+  try {
+    const data = fs.readFileSync(DOCUMENTS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Erreur lecture documents locaux:', error);
+    return [];
   }
-  return false;
-};
+}
 
-export const incrementLocalDownloadCount = (id: string): boolean => {
-  const document = localDocuments.find(doc => doc.id === id);
-  if (document) {
-    document.downloadCount++;
-    return true;
+export function saveLocalDocument(documentData: any) {
+  try {
+    const documents = getAllLocalDocuments();
+    const newDocument = {
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...documentData,
+      uploadedAt: new Date().toISOString(),
+      downloadCount: 0,
+      isActive: true,
+      local: true
+    };
+    
+    documents.unshift(newDocument);
+    fs.writeFileSync(DOCUMENTS_FILE, JSON.stringify(documents, null, 2));
+    
+    console.log('✅ Document sauvegardé localement:', newDocument.id);
+    return newDocument;
+  } catch (error) {
+    console.error('Erreur sauvegarde document local:', error);
+    throw error;
   }
-  return false;
-};
+}
+
+export function deleteLocalDocument(id: string) {
+  try {
+    const documents = getAllLocalDocuments();
+    const filteredDocuments = documents.filter((doc: any) => doc.id !== id);
+    fs.writeFileSync(DOCUMENTS_FILE, JSON.stringify(filteredDocuments, null, 2));
+    
+    console.log('✅ Document supprimé localement:', id);
+    return true;
+  } catch (error) {
+    console.error('Erreur suppression document local:', error);
+    return false;
+  }
+}

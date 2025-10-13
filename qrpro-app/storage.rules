@@ -14,6 +14,12 @@ service firebase.storage {
       allow write: if request.auth != null; // Écriture pour les utilisateurs authentifiés
     }
     
+    // Règles pour les photos de profil
+    match /profile-photos/{allPaths=**} {
+      allow read: if true; // Accès public en lecture
+      allow write: if request.auth != null; // Écriture pour les utilisateurs authentifiés
+    }
+    
     // Règles pour les autres fichiers
     match /{allPaths=**} {
       allow read: if true; // Accès public en lecture

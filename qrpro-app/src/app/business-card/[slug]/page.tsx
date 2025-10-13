@@ -308,6 +308,23 @@ export default function BusinessCardPublicProfile() {
                     <span className="ml-3 text-gray-700">{businessCard.location}</span>
                   </div>
                 )}
+
+                {/* Maps Link */}
+                {businessCard.mapsLink && (
+                  <div className="mt-6">
+                    <a 
+                      href={businessCard.mapsLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center px-4 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition duration-200"
+                    >
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500 mr-3">
+                        <NavigationIcon className="h-5 w-5" />
+                      </div>
+                      <span className="text-blue-600 font-medium">Naviguer vers l'emplacement</span>
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* Biography */}

@@ -45,6 +45,7 @@ export interface BusinessCard {
   email: string;
   address?: string;
   location: string;
+  mapsLink?: string;
   photoPath?: string;
   qrCodePath?: string;
   isActive: boolean;
@@ -133,6 +134,9 @@ export interface Document {
   downloadCount: number;
   description?: string;
   mimeType: string;
+  classification: 'public' | 'confidential';
+  ownerEmail: string;
+  statsTrackingEnabled: boolean;
 }
 
 export interface Toast {

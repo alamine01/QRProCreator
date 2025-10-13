@@ -808,18 +808,25 @@ export const createBusinessCard = async (cardData: any): Promise<string> => {
 // Mettre à jour une carte de visite (admin seulement)
 export const updateBusinessCard = async (cardId: string, cardData: any): Promise<any> => {
   try {
+    console.log('🔥 Firebase: Mise à jour de la carte', cardId);
+    console.log('📋 Données à sauvegarder:', cardData);
+    
     await updateDoc(doc(db, 'businessCards', cardId), {
       ...cardData,
       updatedAt: Timestamp.now()
     });
     
+    console.log('✅ Firebase: Document mis à jour avec succès');
+    
     // Retourner la carte mise à jour
     const cardDoc = await getDoc(doc(db, 'businessCards', cardId));
     if (cardDoc.exists()) {
-      return {
+      const updatedData = {
         id: cardDoc.id,
         ...cardDoc.data()
       };
+      console.log('📄 Firebase: Carte récupérée après mise à jour:', updatedData);
+      return updatedData;
     }
     throw new Error('Carte non trouvée après mise à jour');
   } catch (error) {
@@ -999,7 +1006,11 @@ export const getAllDocuments = async (limitCount?: number): Promise<any[]> => {
 // Créer un document (admin seulement)
 export const createDocument = async (documentData: any): Promise<string> => {
   try {
+    console.log('🔥 Firebase: Début création document');
+    console.log('📋 Données reçues:', JSON.stringify(documentData, null, 2));
+    
     const uniqueId = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log('🆔 ID unique généré:', uniqueId);
     
     const documentRecord = {
       ...documentData,
@@ -1009,10 +1020,14 @@ export const createDocument = async (documentData: any): Promise<string> => {
       isActive: true
     };
 
+    console.log('💾 Enregistrement à créer:', JSON.stringify(documentRecord, null, 2));
     const docRef = await addDoc(collection(db, 'documents'), documentRecord);
+    console.log('✅ Document créé avec ID:', docRef.id);
+    
     return docRef.id;
   } catch (error) {
-    console.error('Erreur lors de la création du document:', error);
+    console.error('❌ Erreur lors de la création du document:', error);
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
     throw error;
   }
 };

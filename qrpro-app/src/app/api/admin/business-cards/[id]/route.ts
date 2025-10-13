@@ -31,6 +31,9 @@ export async function PUT(
     const { id } = await params;
     const data = await request.json();
     
+    console.log('🔄 Mise à jour de la carte:', id);
+    console.log('📋 Données reçues:', data);
+    
     // Vérifier si une autre carte avec cet email existe déjà
     const existingCards = await getAllBusinessCards();
     const emailExists = existingCards.some(card => 
@@ -40,15 +43,19 @@ export async function PUT(
     );
     
     if (emailExists) {
+      console.log('❌ Email déjà utilisé par une autre carte');
       return NextResponse.json({ 
         error: 'Une autre carte de visite avec cet email existe déjà' 
       }, { status: 400 });
     }
     
+    console.log('💾 Sauvegarde dans Firebase...');
     const updatedCard = await updateBusinessCard(id, data);
+    console.log('✅ Carte mise à jour:', updatedCard);
+    
     return NextResponse.json(updatedCard);
   } catch (error) {
-    console.error('Error updating business card:', error);
+    console.error('❌ Erreur lors de la mise à jour:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
