@@ -41,23 +41,30 @@ export async function GET(
     console.log('✅ Accès autorisé pour:', email);
     
     // Récupérer les scans QR réels depuis la collection qrScans
-    const qrScansQuery = query(
-      collection(db, 'qrScans'),
-      where('documentId', '==', id),
-      orderBy('timestamp', 'desc'),
-      limit(50) // Limiter à 50 scans récents
-    );
-    
-    const qrScansSnapshot = await getDocs(qrScansQuery);
-    const qrScans = qrScansSnapshot.docs.map(doc => ({
-      id: doc.id,
-      timestamp: doc.data().timestamp,
-      userAgent: doc.data().userAgent,
-      ip: doc.data().ip,
-      location: doc.data().location
-    }));
-    
-    console.log(`📱 ${qrScans.length} scans QR trouvés pour le document ${id}`);
+    let qrScans = [];
+    try {
+      const qrScansQuery = query(
+        collection(db, 'qrScans'),
+        where('documentId', '==', id),
+        orderBy('timestamp', 'desc'),
+        limit(50) // Limiter à 50 scans récents
+      );
+      
+      const qrScansSnapshot = await getDocs(qrScansQuery);
+      qrScans = qrScansSnapshot.docs.map(doc => ({
+        id: doc.id,
+        timestamp: doc.data().timestamp,
+        userAgent: doc.data().userAgent,
+        ip: doc.data().ip,
+        location: doc.data().location
+      }));
+      
+      console.log(`📱 ${qrScans.length} scans QR trouvés pour le document ${id}`);
+    } catch (qrScansError) {
+      console.log('⚠️ Collection qrScans non accessible ou vide:', qrScansError.message);
+      console.log('📱 Utilisation de données vides pour les scans QR');
+      qrScans = [];
+    }
     
     // Simuler des données de téléchargement (dans un vrai système, vous auriez une collection séparée)
     const downloads = [
