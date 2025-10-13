@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
+import { Timestamp } from 'firebase/firestore';
 import { auth, getUserProfile, createUserProfile, saveUserProfile } from '@/lib/firebase';
 import { User } from '@/types';
 
@@ -80,8 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               tiktok: '',
               snapchat: '',
               isAdmin: false,
-              createdAt: new Date() as any,
-              updatedAt: new Date() as any,
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now(),
             };
 
             // Créer le profil dans Firestore
@@ -92,7 +93,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           setUser(userData);
-          setIsAdmin(userData.isAdmin || false);
+          // ADMIN SPÉCIFIQUE: bahmouhamedalamine@gmail.com
+          const isSpecificAdmin = userData.email === 'bahmouhamedalamine@gmail.com';
+          setIsAdmin(isSpecificAdmin || userData.isAdmin || false);
+          if (isSpecificAdmin) {
+            console.log('🔧 DEBUG: Admin spécifique détecté - bahmouhamedalamine@gmail.com');
+          }
         } catch (error) {
           console.error('Erreur lors de la gestion du profil utilisateur:', error);
           // En cas d'erreur, utiliser les données Google de base

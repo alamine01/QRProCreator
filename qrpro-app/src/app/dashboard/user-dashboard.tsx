@@ -31,12 +31,13 @@ import {
   Menu,
   X,
   ShoppingCart,
-  Package
+  Package,
+  Settings
 } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, isAdmin } = useAuth();
   const [qrCode, setQrCode] = useState<string>('');
   const [profileUrl, setProfileUrl] = useState('');
   const [copied, setCopied] = useState(false);
@@ -161,6 +162,17 @@ export default function DashboardPage() {
                 )}
               </div>
               
+              {/* Admin Button - Only visible for admin users */}
+              {isAdmin && (
+                <button 
+                  onClick={() => router.push('/admin')}
+                  className="bg-blue-500 hover:bg-blue-600 text-white transition-colors duration-200 font-medium flex items-center space-x-2 px-4 py-2 rounded-lg shadow-md hover:shadow-lg"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="text-base">Admin</span>
+                </button>
+              )}
+              
               {/* Logout Button */}
               <button 
                 onClick={logout}
@@ -245,6 +257,25 @@ export default function DashboardPage() {
                         <div className="text-xs text-gray-600">Analyser les scans de votre QR</div>
                       </div>
                     </button>
+
+                    {/* Admin Button - Only visible for admin users */}
+                    {isAdmin && (
+                      <button 
+                        onClick={() => {
+                          router.push('/admin');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all duration-200"
+                      >
+                        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                          <Settings className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-medium text-gray-900 text-sm">Administration</div>
+                          <div className="text-xs text-gray-600">Gérer le système</div>
+                        </div>
+                      </button>
+                    )}
 
                     <button 
                       onClick={() => {

@@ -1,6 +1,6 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, Auth } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, orderBy, limit, Firestore } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, orderBy, limit, deleteDoc, Firestore, Timestamp, increment } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
 import { User, Order, Product, OrderItem, CustomerInfo, PaymentInfo } from '@/types';
 import { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } from './email';
@@ -701,6 +701,382 @@ const sendOrderStatusUpdateEmailToCustomer = async (email: string, orderNumber: 
     await sendOrderStatusUpdateEmail(email, orderNumber, status, customerName);
   } catch (error) {
     console.error('Erreur lors de l\'envoi de l\'email de mise à jour:', error);
+  }
+};
+
+// ===== FONCTIONS POUR L'ADMINISTRATION =====
+
+// Récupérer tous les utilisateurs (admin seulement)
+export const getAllUsers = async (limitCount?: number): Promise<User[]> => {
+  try {
+    let usersQuery = query(
+      collection(db, 'users'),
+      orderBy('createdAt', 'desc')
+    );
+
+    if (limitCount) {
+      usersQuery = query(usersQuery, limit(limitCount));
+    }
+
+    const snapshot = await getDocs(usersQuery);
+    const users = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as User[];
+
+    return users;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des utilisateurs:', error);
+    throw error;
+  }
+};
+
+// Récupérer toutes les commandes (admin seulement)
+export const getAllOrders = async (limitCount?: number, statusFilter?: string): Promise<Order[]> => {
+  try {
+    let ordersQuery = query(
+      collection(db, 'orders'),
+      orderBy('createdAt', 'desc')
+    );
+
+    if (statusFilter && statusFilter !== 'all') {
+      ordersQuery = query(ordersQuery, where('status', '==', statusFilter));
+    }
+
+    if (limitCount) {
+      ordersQuery = query(ordersQuery, limit(limitCount));
+    }
+
+    const snapshot = await getDocs(ordersQuery);
+    const orders = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Order[];
+
+    return orders;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des commandes:', error);
+    throw error;
+  }
+};
+
+// Récupérer toutes les cartes de visite (admin seulement)
+export const getAllBusinessCards = async (limitCount?: number): Promise<any[]> => {
+  try {
+    let cardsQuery = query(
+      collection(db, 'businessCards'),
+      orderBy('createdAt', 'desc')
+    );
+
+    if (limitCount) {
+      cardsQuery = query(cardsQuery, limit(limitCount));
+    }
+
+    const snapshot = await getDocs(cardsQuery);
+    const cards = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return cards;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des cartes de visite:', error);
+    throw error;
+  }
+};
+
+// Créer une carte de visite (admin seulement)
+export const createBusinessCard = async (cardData: any): Promise<string> => {
+  try {
+    const uniqueId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const businessCardData = {
+      ...cardData,
+      uniqueId,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+
+    const docRef = await addDoc(collection(db, 'businessCards'), businessCardData);
+    return docRef.id;
+  } catch (error) {
+    console.error('Erreur lors de la création de la carte de visite:', error);
+    throw error;
+  }
+};
+
+// Mettre à jour une carte de visite (admin seulement)
+export const updateBusinessCard = async (cardId: string, cardData: any): Promise<any> => {
+  try {
+    await updateDoc(doc(db, 'businessCards', cardId), {
+      ...cardData,
+      updatedAt: Timestamp.now()
+    });
+    
+    // Retourner la carte mise à jour
+    const cardDoc = await getDoc(doc(db, 'businessCards', cardId));
+    if (cardDoc.exists()) {
+      return {
+        id: cardDoc.id,
+        ...cardDoc.data()
+      };
+    }
+    throw new Error('Carte non trouvée après mise à jour');
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de la carte de visite:', error);
+    throw error;
+  }
+};
+
+// Supprimer une carte de visite (admin seulement)
+export const deleteBusinessCard = async (cardId: string): Promise<void> => {
+  try {
+    await deleteDoc(doc(db, 'businessCards', cardId));
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la carte de visite:', error);
+    throw error;
+  }
+};
+
+// Mettre à jour le statut admin d'un utilisateur
+export const updateUserAdminStatus = async (userId: string, isAdmin: boolean): Promise<void> => {
+  try {
+    // Vérifier d'abord si l'utilisateur existe
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) {
+      throw new Error(`Utilisateur ${userId} non trouvé`);
+    }
+    
+    // Récupérer les données existantes et mettre à jour seulement les champs nécessaires
+    const userData = userDoc.data();
+    const updatedData = {
+      ...userData,
+      isAdmin,
+      updatedAt: Timestamp.now()
+    };
+    
+    // Utiliser setDoc avec merge pour éviter de perdre des données
+    await setDoc(doc(db, 'users', userId), updatedData, { merge: true });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du statut admin:', error);
+    throw error;
+  }
+};
+
+// Récupérer les statistiques générales (admin seulement)
+export const getAdminStats = async () => {
+  try {
+    let totalUsers = 0;
+    let totalOrders = 0;
+    let totalBusinessCards = 0;
+    let pendingOrders = 0;
+    let totalRevenue = 0;
+    let deliveredOrdersCount = 0;
+
+    // Compter les utilisateurs
+    try {
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      totalUsers = usersSnapshot.size;
+    } catch (error) {
+      console.log('Collection users non trouvée ou erreur:', error);
+    }
+
+    // Compter les commandes
+    try {
+      const ordersSnapshot = await getDocs(collection(db, 'orders'));
+      totalOrders = ordersSnapshot.size;
+
+      // Compter les commandes en attente
+      const pendingOrdersQuery = query(
+        collection(db, 'orders'),
+        where('status', '==', 'pending')
+      );
+      const pendingOrdersSnapshot = await getDocs(pendingOrdersQuery);
+      pendingOrders = pendingOrdersSnapshot.size;
+
+    // Calculer le revenu total et compter les commandes livrées
+    ordersSnapshot.forEach((doc) => {
+      const order = doc.data() as Order;
+      if (order.status === 'delivered') {
+        totalRevenue += order.totalAmount;
+        deliveredOrdersCount++;
+      }
+    });
+    } catch (error) {
+      console.log('Collection orders non trouvée ou erreur:', error);
+    }
+
+    // Compter les cartes de visite
+    try {
+      const cardsSnapshot = await getDocs(collection(db, 'businessCards'));
+      totalBusinessCards = cardsSnapshot.size;
+    } catch (error) {
+      console.log('Collection businessCards non trouvée ou erreur:', error);
+    }
+
+    // Calculer le panier moyen (basé sur les commandes livrées uniquement)
+    const averageOrderValue = deliveredOrdersCount > 0 ? totalRevenue / deliveredOrdersCount : 0;
+
+    return {
+      totalUsers,
+      totalOrders,
+      totalBusinessCards,
+      pendingOrders,
+      totalRevenue,
+      averageOrderValue,
+      userGrowth: 0, // À implémenter avec des données historiques
+      orderGrowth: 0, // À implémenter avec des données historiques
+      revenueGrowth: 0 // À implémenter avec des données historiques
+    };
+  } catch (error) {
+    console.error('Erreur lors de la récupération des statistiques admin:', error);
+    throw error;
+  }
+};
+
+// ===== FONCTIONS POUR LES DOCUMENTS =====
+
+// Récupérer tous les documents (admin seulement)
+export const getAllDocuments = async (limitCount?: number): Promise<any[]> => {
+  try {
+    console.log('Tentative de récupération des documents...');
+    
+    // Essayer d'abord avec orderBy, puis sans si ça échoue
+    try {
+      let docsQuery = query(
+        collection(db, 'documents'),
+        orderBy('uploadedAt', 'desc')
+      );
+
+      if (limitCount) {
+        docsQuery = query(docsQuery, limit(limitCount));
+      }
+
+      const snapshot = await getDocs(docsQuery);
+      const documents = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      console.log('Documents récupérés avec orderBy:', documents.length);
+      return documents;
+    } catch (orderByError) {
+      console.log('orderBy échoué, tentative sans orderBy:', orderByError);
+      
+      // Essayer sans orderBy
+      let docsQuery = query(collection(db, 'documents'));
+      
+      if (limitCount) {
+        docsQuery = query(docsQuery, limit(limitCount));
+      }
+
+      const snapshot = await getDocs(docsQuery);
+      const documents = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      console.log('Documents récupérés sans orderBy:', documents.length);
+      return documents;
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération des documents:', error);
+    
+    // Si la collection n'existe pas encore, retourner un tableau vide
+    if (error instanceof Error && (
+      error.message.includes('collection') || 
+      error.message.includes('not found') ||
+      error.message.includes('permission')
+    )) {
+      console.log('Collection documents n\'existe pas encore ou problème de permissions, retour d\'un tableau vide');
+      return [];
+    }
+    
+    throw error;
+  }
+};
+
+// Créer un document (admin seulement)
+export const createDocument = async (documentData: any): Promise<string> => {
+  try {
+    const uniqueId = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const documentRecord = {
+      ...documentData,
+      uniqueId,
+      uploadedAt: Timestamp.now(),
+      downloadCount: 0,
+      isActive: true
+    };
+
+    const docRef = await addDoc(collection(db, 'documents'), documentRecord);
+    return docRef.id;
+  } catch (error) {
+    console.error('Erreur lors de la création du document:', error);
+    throw error;
+  }
+};
+
+// Mettre à jour un document (admin seulement)
+export const updateDocument = async (documentId: string, documentData: any): Promise<any> => {
+  try {
+    await updateDoc(doc(db, 'documents', documentId), {
+      ...documentData,
+      updatedAt: Timestamp.now()
+    });
+    
+    // Retourner le document mis à jour
+    const docSnapshot = await getDoc(doc(db, 'documents', documentId));
+    if (docSnapshot.exists()) {
+      return {
+        id: docSnapshot.id,
+        ...docSnapshot.data()
+      };
+    }
+    throw new Error('Document non trouvé après mise à jour');
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du document:', error);
+    throw error;
+  }
+};
+
+// Supprimer un document (admin seulement)
+export const deleteDocument = async (documentId: string): Promise<void> => {
+  try {
+    await deleteDoc(doc(db, 'documents', documentId));
+  } catch (error) {
+    console.error('Erreur lors de la suppression du document:', error);
+    throw error;
+  }
+};
+
+// Incrémenter le compteur de téléchargement
+export const incrementDownloadCount = async (documentId: string): Promise<void> => {
+  try {
+    const docRef = doc(db, 'documents', documentId);
+    await updateDoc(docRef, {
+      downloadCount: increment(1)
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'incrémentation du compteur:', error);
+    throw error;
+  }
+};
+
+// Récupérer un document par ID (accès public)
+export const getDocumentById = async (documentId: string): Promise<any> => {
+  try {
+    const docSnapshot = await getDoc(doc(db, 'documents', documentId));
+    if (docSnapshot.exists()) {
+      return {
+        id: docSnapshot.id,
+        ...docSnapshot.data()
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Erreur lors de la récupération du document:', error);
+    throw error;
   }
 };
 

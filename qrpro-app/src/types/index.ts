@@ -35,6 +35,9 @@ export interface BusinessCard {
   id: string;
   name: string;
   title: string;
+  company?: string;
+  bio?: string;
+  website?: string;
   phonePrimary: string;
   phoneSecondary?: string;
   phoneThird?: string;
@@ -43,6 +46,8 @@ export interface BusinessCard {
   address?: string;
   location: string;
   photoPath?: string;
+  qrCodePath?: string;
+  isActive: boolean;
   // Social media fields
   instagram?: string;
   whatsapp?: string;
@@ -111,6 +116,23 @@ export interface Order {
   deliveredAt?: Timestamp;
   cancelledAt?: Timestamp;
   cancellationReason?: string;
+}
+
+export interface Document {
+  id: string;
+  name: string;
+  originalName: string;
+  fileType: string;
+  fileSize: number;
+  filePath: string;
+  publicUrl: string;
+  qrCodePath?: string;
+  uploadedBy: string;
+  uploadedAt: Timestamp;
+  isActive: boolean;
+  downloadCount: number;
+  description?: string;
+  mimeType: string;
 }
 
 export interface Toast {

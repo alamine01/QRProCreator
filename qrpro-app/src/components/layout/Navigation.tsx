@@ -33,12 +33,32 @@ export function Navigation() {
               <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full"></div>
             ) : user ? (
               <div className="flex items-center space-x-3">
+                {/* Admin Link */}
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Admin</span>
+                  </Link>
+                )}
+                
+                {/* Dashboard Link */}
+                <Link
+                  href="/dashboard"
+                  className="bg-primary-500 hover:bg-primary-600 text-white px-3 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <QrCode className="h-4 w-4" />
+                  <span>Tableau de Bord</span>
+                </Link>
+                
                 <span className="text-sm font-medium text-gray-700">
                   {user.firstName} {user.lastName}
                 </span>
                 <button
                   onClick={logout}
-                  className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
                 >
                   Déconnexion
                 </button>

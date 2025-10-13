@@ -1,0 +1,34 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Règles pour les utilisateurs
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && resource.data.isAdmin == true;
+    }
+    
+    // Règles pour les commandes
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Règles pour les cartes de visite
+    match /businessCards/{cardId} {
+      allow read: if true; // Accès public en lecture
+      allow write: if request.auth != null;
+    }
+    
+    // Règles pour les documents
+    match /documents/{documentId} {
+      allow read: if true; // Accès public en lecture
+      allow write: if request.auth != null;
+    }
+    
+    // Règles pour les produits
+    match /products/{productId} {
+      allow read: if true; // Accès public en lecture
+      allow write: if request.auth != null;
+    }
+  }
+}
