@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
         ...documentData,
         publicUrl: correctPublicUrl, // Utiliser l'URL avec l'ID Firebase réel
         downloadCount: 0,
+        qrScanCount: 0,
         isActive: true,
         uploadedAt: new Date().toISOString()
       };

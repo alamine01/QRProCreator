@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDocumentById } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 
 // GET /api/document-stats/[id] - Récupérer les statistiques d'un document
 export async function GET(
@@ -37,6 +39,25 @@ export async function GET(
     }
     
     console.log('✅ Accès autorisé pour:', email);
+    
+    // Récupérer les scans QR réels depuis la collection qrScans
+    const qrScansQuery = query(
+      collection(db, 'qrScans'),
+      where('documentId', '==', id),
+      orderBy('timestamp', 'desc'),
+      limit(50) // Limiter à 50 scans récents
+    );
+    
+    const qrScansSnapshot = await getDocs(qrScansQuery);
+    const qrScans = qrScansSnapshot.docs.map(doc => ({
+      id: doc.id,
+      timestamp: doc.data().timestamp,
+      userAgent: doc.data().userAgent,
+      ip: doc.data().ip,
+      location: doc.data().location
+    }));
+    
+    console.log(`📱 ${qrScans.length} scans QR trouvés pour le document ${id}`);
     
     // Simuler des données de téléchargement (dans un vrai système, vous auriez une collection séparée)
     const downloads = [
@@ -76,8 +97,10 @@ export async function GET(
       classification: document.classification,
       statsTrackingEnabled: document.statsTrackingEnabled,
       downloadCount: document.downloadCount,
+      qrScanCount: document.qrScanCount || 0,
       uploadedAt: document.uploadedAt,
       downloads: downloads,
+      qrScans: qrScans,
       mimeType: document.mimeType
     };
     
@@ -85,7 +108,9 @@ export async function GET(
       id: stats.id,
       name: stats.name,
       downloadCount: stats.downloadCount,
-      downloadsLength: stats.downloads.length
+      qrScanCount: stats.qrScanCount,
+      downloadsLength: stats.downloads.length,
+      qrScansLength: stats.qrScans.length
     });
     
     return NextResponse.json(stats);

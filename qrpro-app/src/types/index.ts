@@ -132,11 +132,21 @@ export interface Document {
   uploadedAt: Timestamp;
   isActive: boolean;
   downloadCount: number;
+  qrScanCount: number;
   description?: string;
   mimeType: string;
   classification: 'public' | 'confidential';
   ownerEmail: string;
   statsTrackingEnabled: boolean;
+}
+
+export interface QrScan {
+  id: string;
+  documentId: string;
+  timestamp: Timestamp;
+  userAgent?: string;
+  ip?: string;
+  location?: string;
 }
 
 export interface Toast {

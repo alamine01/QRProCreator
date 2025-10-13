@@ -270,12 +270,32 @@ export default function AdminDocumentsPage() {
     return statsUrl;
   };
 
+  const generateQRCodeLink = (document: Document) => {
+    // Valeurs par défaut pour les documents existants
+    const classification = document.classification || 'public';
+    const statsTrackingEnabled = document.statsTrackingEnabled !== undefined ? document.statsTrackingEnabled : true;
+    
+    if (!statsTrackingEnabled || classification !== 'public') {
+      // Pour les documents confidentiels ou sans tracking, pointer directement vers le document
+      const baseUrl = window.location.origin;
+      return `${baseUrl}/api/document/${document.id}`;
+    }
+    
+    // Pour les documents publics avec tracking, pointer vers la route de tracking des scans QR
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/api/document-stats/${document.id}/scan`;
+  };
+
   const handleDownloadQRCode = async (document: Document) => {
     try {
       console.log('🔲 Génération QR code pour:', document.name);
       
+      // Utiliser la nouvelle fonction pour générer le bon lien
+      const qrCodeUrl = generateQRCodeLink(document);
+      console.log('🔗 URL du QR code:', qrCodeUrl);
+      
       // Générer le QR code en PNG
-      const qrCodeDataURL = await QRCode.toDataURL(document.publicUrl, {
+      const qrCodeDataURL = await QRCode.toDataURL(qrCodeUrl, {
         width: 300,
         margin: 2,
         color: {

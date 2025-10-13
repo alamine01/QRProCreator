@@ -13,7 +13,9 @@ import {
   CheckCircle,
   TrendingUp,
   Clock,
-  User
+  User,
+  QrCode,
+  Smartphone
 } from 'lucide-react';
 
 interface DocumentStats {
@@ -24,12 +26,20 @@ interface DocumentStats {
   classification: 'public' | 'confidential';
   statsTrackingEnabled: boolean;
   downloadCount: number;
+  qrScanCount: number;
   uploadedAt: any;
   mimeType?: string;
   downloads: Array<{
     timestamp: any;
     userAgent?: string;
     ip?: string;
+  }>;
+  qrScans: Array<{
+    id: string;
+    timestamp: any;
+    userAgent?: string;
+    ip?: string;
+    location?: string;
   }>;
 }
 
@@ -232,7 +242,7 @@ export default function DocumentStatsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -241,6 +251,18 @@ export default function DocumentStatsPage() {
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-500">Total Téléchargements</p>
                 <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{documentStats.downloadCount}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <QrCode className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-500">Scans QR Code</p>
+                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{documentStats.qrScanCount || 0}</p>
               </div>
             </div>
           </div>
@@ -292,6 +314,49 @@ export default function DocumentStatsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* QR Scans Timeline */}
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Historique des Scans QR</h3>
+          
+          {documentStats.qrScans && documentStats.qrScans.length > 0 ? (
+            <div className="space-y-2 sm:space-y-3">
+              {documentStats.qrScans.map((scan, index) => (
+                <div key={scan.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-indigo-50 rounded-lg gap-2 sm:gap-0">
+                  <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <QrCode className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">
+                        Scan QR #{index + 1}
+                      </p>
+                      <p className="text-xs text-gray-500 whitespace-nowrap">
+                        {formatDate(scan.timestamp)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
+                      {scan.userAgent ? scan.userAgent.split(' ')[0] : 'Appareil inconnu'}
+                    </p>
+                    {scan.ip && (
+                      <p className="text-xs text-gray-400">
+                        IP: {scan.ip}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 sm:py-8">
+              <QrCode className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun scan QR</h3>
+              <p className="text-sm sm:text-base text-gray-500">Ce document n'a pas encore été scanné via QR code.</p>
+            </div>
+          )}
         </div>
 
         {/* Downloads Timeline */}
