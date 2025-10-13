@@ -218,20 +218,20 @@ export default function DocumentStatsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-4 sm:py-6 lg:py-8 px-3 sm:px-4 lg:px-6 xl:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
             <div className="text-3xl sm:text-4xl flex-shrink-0">{getFileIcon(documentStats.mimeType || '')}</div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
+              <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-1 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                 {documentStats.name}
               </h1>
-              <p className="text-xs sm:text-sm text-gray-500 mb-2 break-words" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
+              <p className="text-xs sm:text-sm text-gray-500 mb-3 break-words" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
                 {documentStats.originalName}
               </p>
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <div className="flex flex-col xs:flex-row xs:items-center space-y-2 xs:space-y-0 xs:space-x-3">
                 <span className={`text-xs px-2 py-1 rounded-full w-fit ${
                   documentStats.classification === 'public'
                     ? 'bg-blue-100 text-blue-800' 
@@ -239,7 +239,7 @@ export default function DocumentStatsPage() {
                 }`}>
                   {documentStats.classification === 'public' ? 'Public' : 'Confidentiel'}
                 </span>
-                <span className="text-xs text-gray-500 whitespace-nowrap">
+                <span className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                   📅 Uploadé le {formatDate(documentStats.uploadedAt)}
                 </span>
               </div>
@@ -248,7 +248,7 @@ export default function DocumentStatsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -323,13 +323,13 @@ export default function DocumentStatsPage() {
         </div>
 
         {/* QR Scans Timeline */}
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Historique des Scans QR</h3>
+        <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6">
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Historique des Scans QR</h3>
           
           {documentStats.qrScans && documentStats.qrScans.length > 0 ? (
             <div className="space-y-2 sm:space-y-3">
               {documentStats.qrScans.map((scan, index) => (
-                <div key={scan.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-indigo-50 rounded-lg gap-2 sm:gap-0">
+                <div key={scan.id} className="flex flex-col xs:flex-row xs:items-center xs:justify-between p-3 bg-indigo-50 rounded-lg gap-2 xs:gap-0">
                   <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                     <div className="w-6 h-6 sm:w-8 sm:h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <QrCode className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-600" />
@@ -338,17 +338,17 @@ export default function DocumentStatsPage() {
                       <p className="text-xs sm:text-sm font-medium text-gray-900">
                         Scan QR #{index + 1}
                       </p>
-                      <p className="text-xs text-gray-500 whitespace-nowrap">
+                      <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                         {formatDate(scan.timestamp)}
                       </p>
                     </div>
                   </div>
-                  <div className="text-left sm:text-right">
+                  <div className="text-left xs:text-right">
                     <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                       {scan.userAgent ? scan.userAgent.split(' ')[0] : 'Appareil inconnu'}
                     </p>
                     {scan.ip && (
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                         IP: {scan.ip}
                       </p>
                     )}
@@ -358,21 +358,21 @@ export default function DocumentStatsPage() {
             </div>
           ) : (
             <div className="text-center py-6 sm:py-8">
-              <QrCode className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun scan QR</h3>
-              <p className="text-sm sm:text-base text-gray-500">Ce document n'a pas encore été scanné via QR code.</p>
+              <QrCode className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-gray-900 mb-2">Aucun scan QR</h3>
+              <p className="text-xs sm:text-sm md:text-base text-gray-500">Ce document n'a pas encore été scanné via QR code.</p>
             </div>
           )}
         </div>
 
         {/* Downloads Timeline */}
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Historique des Téléchargements</h3>
+        <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 lg:p-6">
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Historique des Téléchargements</h3>
           
           {documentStats.downloads && documentStats.downloads.length > 0 ? (
             <div className="space-y-2 sm:space-y-3">
               {documentStats.downloads.map((download, index) => (
-                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg gap-2 sm:gap-0">
+                <div key={index} className="flex flex-col xs:flex-row xs:items-center xs:justify-between p-3 bg-gray-50 rounded-lg gap-2 xs:gap-0">
                   <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                     <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <Download className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
@@ -381,12 +381,12 @@ export default function DocumentStatsPage() {
                       <p className="text-xs sm:text-sm font-medium text-gray-900">
                         Téléchargement #{index + 1}
                       </p>
-                      <p className="text-xs text-gray-500 whitespace-nowrap">
+                      <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                         {formatDate(download.timestamp)}
                       </p>
                     </div>
                   </div>
-                  <div className="text-left sm:text-right">
+                  <div className="text-left xs:text-right">
                     <p className="text-xs text-gray-500 break-words" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                       {download.userAgent ? download.userAgent.split(' ')[0] : 'Appareil inconnu'}
                     </p>
@@ -396,9 +396,9 @@ export default function DocumentStatsPage() {
             </div>
           ) : (
             <div className="text-center py-6 sm:py-8">
-              <Download className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun téléchargement</h3>
-              <p className="text-sm sm:text-base text-gray-500">Ce document n'a pas encore été téléchargé.</p>
+              <Download className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-gray-900 mb-2">Aucun téléchargement</h3>
+              <p className="text-xs sm:text-sm md:text-base text-gray-500">Ce document n'a pas encore été téléchargé.</p>
             </div>
           )}
         </div>
