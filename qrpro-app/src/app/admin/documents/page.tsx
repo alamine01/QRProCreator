@@ -108,8 +108,15 @@ export default function AdminDocumentsPage() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !documentName || !ownerEmail) {
-      alert('Veuillez sélectionner un fichier, saisir un nom et une adresse email');
+    // Validation différente selon le type de document
+    if (!selectedFile || !documentName) {
+      alert('Veuillez sélectionner un fichier et saisir un nom');
+      return;
+    }
+    
+    // Pour les documents publics, l'email est requis pour le suivi des statistiques
+    if (documentClassification === 'public' && !ownerEmail) {
+      alert('Pour les documents publics, veuillez saisir l\'adresse email du propriétaire pour le suivi des statistiques');
       return;
     }
 
@@ -146,7 +153,7 @@ export default function AdminDocumentsPage() {
         description: documentDescription || '',
         mimeType: selectedFile.type,
         classification: documentClassification,
-        ownerEmail: ownerEmail,
+        ownerEmail: documentClassification === 'public' ? ownerEmail : 'confidential@admin.local',
         statsTrackingEnabled: documentClassification === 'public'
       };
 
@@ -667,7 +674,14 @@ export default function AdminDocumentsPage() {
                           name="classification"
                           value="public"
                           checked={documentClassification === 'public'}
-                          onChange={(e) => setDocumentClassification(e.target.value as 'public' | 'confidential')}
+                          onChange={(e) => {
+                            const newClassification = e.target.value as 'public' | 'confidential';
+                            setDocumentClassification(newClassification);
+                            // Réinitialiser l'email si on passe en confidentiel
+                            if (newClassification === 'confidential') {
+                              setOwnerEmail('');
+                            }
+                          }}
                           className="mr-2 text-primary-500 focus:ring-primary-500"
                         />
                         <span className="text-sm text-gray-700">Public (accessible avec lien de suivi)</span>
@@ -678,7 +692,14 @@ export default function AdminDocumentsPage() {
                           name="classification"
                           value="confidential"
                           checked={documentClassification === 'confidential'}
-                          onChange={(e) => setDocumentClassification(e.target.value as 'public' | 'confidential')}
+                          onChange={(e) => {
+                            const newClassification = e.target.value as 'public' | 'confidential';
+                            setDocumentClassification(newClassification);
+                            // Réinitialiser l'email si on passe en confidentiel
+                            if (newClassification === 'confidential') {
+                              setOwnerEmail('');
+                            }
+                          }}
                           className="mr-2 text-primary-500 focus:ring-primary-500"
                         />
                         <span className="text-sm text-gray-700">Confidentiel (pas de suivi)</span>
@@ -686,21 +707,23 @@ export default function AdminDocumentsPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email du propriétaire *
-                    </label>
-                    <input
-                      type="email"
-                      value={ownerEmail}
-                      onChange={(e) => setOwnerEmail(e.target.value)}
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
-                      placeholder="email@exemple.com"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Email du propriétaire pour le suivi des statistiques
-                    </p>
-                  </div>
+                  {documentClassification === 'public' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email du propriétaire *
+                      </label>
+                      <input
+                        type="email"
+                        value={ownerEmail}
+                        onChange={(e) => setOwnerEmail(e.target.value)}
+                        className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
+                        placeholder="email@exemple.com"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Email du propriétaire pour le suivi des statistiques
+                      </p>
+                    </div>
+                  )}
 
                   {selectedFile && (
                     <div className="bg-gray-50 rounded-lg p-3">
@@ -723,7 +746,7 @@ export default function AdminDocumentsPage() {
                     </button>
                     <button
                       onClick={handleUpload}
-                      disabled={!selectedFile || !documentName || !ownerEmail || isUploading}
+                      disabled={!selectedFile || !documentName || (documentClassification === 'public' && !ownerEmail) || isUploading}
                       className="w-full sm:w-auto px-4 py-2 sm:py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
                     >
                       {isUploading ? (
