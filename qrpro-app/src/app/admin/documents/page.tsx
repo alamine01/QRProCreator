@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 import * as QRCode from 'qrcode';
+import { generateSecurePassword } from '@/lib/password';
 import { 
   Upload, 
   FileText, 
@@ -22,7 +23,8 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  ArrowLeft
 } from 'lucide-react';
 
 interface Document {
@@ -44,6 +46,8 @@ interface Document {
   classification: 'public' | 'confidential';
   ownerEmail: string;
   statsTrackingEnabled: boolean;
+  ownerPassword?: string; // Mot de passe hashé pour l'accès aux statistiques
+  ownerPasswordPlain?: string; // Mot de passe en clair pour affichage admin
 }
 
 export default function AdminDocumentsPage() {
@@ -57,6 +61,7 @@ export default function AdminDocumentsPage() {
   const [documentDescription, setDocumentDescription] = useState('');
   const [documentClassification, setDocumentClassification] = useState<'public' | 'confidential'>('public');
   const [ownerEmail, setOwnerEmail] = useState('');
+  const [ownerPassword, setOwnerPassword] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -114,9 +119,9 @@ export default function AdminDocumentsPage() {
       return;
     }
     
-    // Pour les documents publics, l'email est requis pour le suivi des statistiques
-    if (documentClassification === 'public' && !ownerEmail) {
-      alert('Pour les documents publics, veuillez saisir l\'adresse email du propriétaire pour le suivi des statistiques');
+    // Pour les documents publics, l'email et le mot de passe sont requis pour le suivi des statistiques
+    if (documentClassification === 'public' && (!ownerEmail || !ownerPassword)) {
+      alert('Pour les documents publics, veuillez saisir l\'adresse email et le mot de passe du propriétaire pour le suivi des statistiques');
       return;
     }
 
@@ -154,6 +159,8 @@ export default function AdminDocumentsPage() {
         mimeType: selectedFile.type,
         classification: documentClassification,
         ownerEmail: documentClassification === 'public' ? ownerEmail : 'confidential@admin.local',
+        ownerPassword: documentClassification === 'public' ? ownerPassword : undefined,
+        ownerPasswordPlain: documentClassification === 'public' ? ownerPassword : undefined,
         statsTrackingEnabled: documentClassification === 'public'
       };
 
@@ -222,6 +229,7 @@ export default function AdminDocumentsPage() {
         setDocumentDescription('');
         setDocumentClassification('public');
         setOwnerEmail('');
+        setOwnerPassword('');
         alert('Document uploadé avec succès!');
       } else {
         console.error('❌ Erreur HTTP:', response.status, response.statusText);
@@ -259,14 +267,21 @@ export default function AdminDocumentsPage() {
     // Valeurs par défaut pour les documents existants
     const classification = document.classification || 'public';
     const statsTrackingEnabled = document.statsTrackingEnabled !== undefined ? document.statsTrackingEnabled : true;
-    const ownerEmail = document.ownerEmail || 'admin@example.com';
+    
+    // Vérifier que l'email du propriétaire existe
+    if (!document.ownerEmail) {
+      console.warn('⚠️ Document sans propriétaire:', document.id, document.name);
+      return null;
+    }
     
     if (!statsTrackingEnabled || classification !== 'public') {
       return null;
     }
     
     const baseUrl = window.location.origin;
-    const statsUrl = `${baseUrl}/document-stats/${document.id}?email=${encodeURIComponent(ownerEmail)}`;
+    // Note: Le mot de passe ne peut pas être inclus dans l'URL pour des raisons de sécurité
+    // L'utilisateur devra le saisir manuellement sur la page de statistiques
+    const statsUrl = `${baseUrl}/document-stats/${document.id}?email=${encodeURIComponent(document.ownerEmail)}`;
     return statsUrl;
   };
 
@@ -392,10 +407,19 @@ export default function AdminDocumentsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              📄 Gestion des Documents
-            </h1>
-            <p className="text-sm text-gray-600">
+            <div className="flex items-center mb-2">
+              <button
+                onClick={() => router.push('/admin')}
+                className="mr-3 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Retour au dashboard admin"
+              >
+                <ArrowLeft className="h-5 w-5 text-gray-600" />
+              </button>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                📄 Gestion des Documents
+              </h1>
+            </div>
+            <p className="text-sm text-gray-600 ml-11">
               Upload, gérez et partagez vos documents avec des QR codes
             </p>
           </div>
@@ -575,6 +599,9 @@ export default function AdminDocumentsPage() {
                         <button
                           onClick={() => {
                             setSelectedDocument(document);
+                            // Générer automatiquement le lien de suivi
+                            const trackingLink = generateStatsTrackingLink(document);
+                            setStatsTrackingLink(trackingLink || '');
                             setShowDetailModal(true);
                           }}
                           className="p-2 sm:p-2.5 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
@@ -728,20 +755,50 @@ export default function AdminDocumentsPage() {
                   </div>
 
                   {documentClassification === 'public' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email du propriétaire *
-                      </label>
-                      <input
-                        type="email"
-                        value={ownerEmail}
-                        onChange={(e) => setOwnerEmail(e.target.value)}
-                        className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
-                        placeholder="email@exemple.com"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Email du propriétaire pour le suivi des statistiques
-                      </p>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Email du propriétaire *
+                        </label>
+                        <input
+                          type="email"
+                          value={ownerEmail}
+                          onChange={(e) => setOwnerEmail(e.target.value)}
+                          className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
+                          placeholder="email@exemple.com"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Email du propriétaire pour le suivi des statistiques
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Mot de passe pour les statistiques *
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newPassword = generateSecurePassword();
+                              setOwnerPassword(newPassword);
+                            }}
+                            className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                          >
+                            Générer automatiquement
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={ownerPassword}
+                          onChange={(e) => setOwnerPassword(e.target.value)}
+                          className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base font-mono"
+                          placeholder="Mot de passe sécurisé"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Mot de passe requis en plus de l'email pour accéder aux statistiques
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -766,7 +823,7 @@ export default function AdminDocumentsPage() {
                     </button>
                     <button
                       onClick={handleUpload}
-                      disabled={!selectedFile || !documentName || (documentClassification === 'public' && !ownerEmail) || isUploading}
+                      disabled={!selectedFile || !documentName || (documentClassification === 'public' && (!ownerEmail || !ownerPassword)) || isUploading}
                       className="w-full sm:w-auto px-4 py-2 sm:py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
                     >
                       {isUploading ? (
@@ -852,6 +909,33 @@ export default function AdminDocumentsPage() {
                       <p className="text-xs sm:text-sm font-medium text-gray-700">Propriétaire</p>
                       <p className="text-sm sm:text-base text-gray-900">{selectedDocument.ownerEmail || 'admin@example.com'}</p>
                     </div>
+                    {(selectedDocument.classification || 'public') === 'public' && selectedDocument.ownerPassword && (
+                      <div>
+                        <p className="text-xs sm:text-sm font-medium text-gray-700">Mot de passe</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-sm sm:text-base text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">
+                            {selectedDocument.ownerPasswordPlain || 'Document ancien - Mot de passe non disponible'}
+                          </p>
+                          {selectedDocument.ownerPasswordPlain && (
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(selectedDocument.ownerPasswordPlain || '');
+                                alert('Mot de passe copié !');
+                              }}
+                              className="text-xs text-primary-600 hover:text-primary-700"
+                            >
+                              Copier
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {selectedDocument.ownerPasswordPlain 
+                            ? '⚠️ Ce mot de passe est stocké de manière sécurisée. Copiez-le pour le donner au propriétaire.'
+                            : 'ℹ️ Ce document a été créé avant l\'implémentation des mots de passe. Le mot de passe n\'est pas disponible.'
+                          }
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -900,37 +984,23 @@ export default function AdminDocumentsPage() {
                         <p className="text-sm font-medium text-gray-700 mb-2">Lien de suivi des statistiques</p>
                         <div className="space-y-2">
                           <div className="px-2 sm:px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-green-800 text-xs sm:text-sm break-all">
-                            {statsTrackingLink || 'Cliquer sur "Générer" pour créer le lien'}
+                            {statsTrackingLink || 'Aucun lien de suivi disponible pour ce document'}
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {statsTrackingLink && (
                             <button
                               onClick={() => {
-                                const trackingLink = generateStatsTrackingLink(selectedDocument);
-                                if (trackingLink) {
-                                  setStatsTrackingLink(trackingLink);
-                                }
+                                navigator.clipboard.writeText(statsTrackingLink);
+                                alert('Lien de suivi copié !');
                               }}
-                              className="px-3 sm:px-4 py-2 sm:py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-xs sm:text-sm"
-                              title="Générer le lien de suivi"
+                              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors text-xs sm:text-sm"
+                              title="Copier le lien de suivi"
                             >
-                              Générer
+                              Copier le lien
                             </button>
-                            {statsTrackingLink && (
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(statsTrackingLink);
-                                  alert('Lien de suivi copié !');
-                                }}
-                                className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors text-xs sm:text-sm"
-                                title="Copier le lien de suivi"
-                              >
-                                Copier
-                              </button>
-                            )}
-                          </div>
+                          )}
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                          Ce lien permet au propriétaire ({selectedDocument.ownerEmail || 'admin@example.com'}) de consulter les statistiques de téléchargement
+                          Ce lien permet au propriétaire ({selectedDocument.ownerEmail || 'Email non défini'}) de consulter les statistiques de téléchargement. Un mot de passe sera requis pour l'accès.
                         </p>
                       </div>
                     </div>

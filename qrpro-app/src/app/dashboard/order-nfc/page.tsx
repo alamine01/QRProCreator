@@ -175,7 +175,7 @@ Merci pour votre commande ! 🚀`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Return Button */}
         <div className="mb-6">
           <button
@@ -199,8 +199,10 @@ Merci pour votre commande ! 🚀`;
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section 1: Personal Information */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8 border border-white/20">
+          {/* Layout desktop en colonnes */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Section 1: Personal Information */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 lg:p-8 border border-white/20">
             <div className="flex items-center mb-6">
               <div className="bg-blue-100 rounded-full p-2 mr-4">
                 <User className="w-6 h-6 text-blue-600" />
@@ -300,10 +302,10 @@ Merci pour votre commande ! 🚀`;
                 </div>
               </div>
             </div>
-          </div>
+            </div>
 
-          {/* Section 2: Products */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8 border border-white/20">
+            {/* Section 2: Products */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 lg:p-8 border border-white/20">
             <div className="flex items-center mb-6">
               <div className="bg-green-100 rounded-full p-2 mr-4">
                 <Package className="w-6 h-6 text-green-600" />
@@ -368,10 +370,11 @@ Merci pour votre commande ! 🚀`;
                 </select>
               </div>
             </div>
+            </div>
           </div>
 
           {/* Section 3: Purpose */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8 border border-white/20">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 lg:p-8 border border-white/20">
             <div className="flex items-center mb-6">
               <div className="bg-purple-100 rounded-full p-2 mr-4">
                 <Star className="w-6 h-6 text-purple-600" />
@@ -420,7 +423,7 @@ Merci pour votre commande ! 🚀`;
           </div>
 
           {/* Section 4: Contact & Social */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8 border border-white/20">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 lg:p-8 border border-white/20">
             <div className="flex items-center mb-6">
               <div className="bg-orange-100 rounded-full p-2 mr-4">
                 <MessageCircle className="w-6 h-6 text-orange-600" />
@@ -460,7 +463,7 @@ Merci pour votre commande ! 🚀`;
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 font-medium mb-2" htmlFor="socialMedia1">
                     Réseau social 1
@@ -525,7 +528,7 @@ Merci pour votre commande ! 🚀`;
           </div>
 
           {/* Section 5: Source */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8 border border-white/20">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 lg:p-8 border border-white/20">
             <div className="flex items-center mb-6">
               <div className="bg-indigo-100 rounded-full p-2 mr-4">
                 <CheckCircle className="w-6 h-6 text-indigo-600" />
@@ -595,7 +598,7 @@ Merci pour votre commande ! 🚀`;
             <button
               type="submit"
               disabled={submitting || formData.products.length === 0}
-              className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 transition-all duration-200"
+              className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 transition-all duration-200 max-w-md mx-auto w-full"
             >
               {submitting ? (
                 <>

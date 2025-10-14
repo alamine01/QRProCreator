@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { AdminGuard } from '@/components/security/AdminGuard';
 import { AdminNavigation } from '@/components/layout/AdminNavigation';
 import { 
   FaArrowLeft,
@@ -25,10 +26,13 @@ import ResponsiveTable from '@/components/ui/ResponsiveTable';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
 import { AdminPageLoader } from '@/components/ui/LoadingSpinner';
 import { Order } from '@/types';
+import { sendOrderStatusUpdateEmail } from '@/lib/email';
 
 export default function OrdersManagement() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  
+  // Note: La sécurité est gérée par AdminGuard
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -46,30 +50,29 @@ export default function OrdersManagement() {
   // Fonction pour charger les commandes
   const fetchOrders = async () => {
     try {
+      console.log('🚀 [ADMIN UI] Début du chargement des commandes');
       setOrdersLoading(true);
       const response = await fetch('/api/admin/orders');
+      console.log('🚀 [ADMIN UI] Réponse API:', response.status, response.ok);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('🚀 [ADMIN UI] Commandes chargées:', data.length, 'commandes');
         setOrders(data);
       } else {
-        console.error('Erreur lors du chargement des commandes');
+        console.error('❌ [ADMIN UI] Erreur lors du chargement des commandes:', response.status);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des commandes:', error);
+      console.error('❌ [ADMIN UI] Erreur lors du chargement des commandes:', error);
     } finally {
       setOrdersLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!loading && (!user || !user.isAdmin)) {
-      router.push('/auth/signin');
-      return;
-    }
-    
-    // Charger les commandes au montage du composant
+    console.log('🚀 [ADMIN UI] Chargement des commandes');
     fetchOrders();
-  }, [user, loading, router]);
+  }, []);
 
   // Utiliser useMemo pour optimiser le filtrage
   const filteredOrders = useMemo(() => {
@@ -99,6 +102,12 @@ export default function OrdersManagement() {
     if (!selectedOrder || !statusUpdate.status) return;
 
     try {
+      console.log('🚀 [ADMIN UI] Début de la mise à jour de statut:', {
+        orderId: selectedOrder.id,
+        newStatus: statusUpdate.status,
+        customerEmail: selectedOrder.customerInfo.email
+      });
+      
       setIsUpdating(true);
       const response = await fetch('/api/admin/orders', {
         method: 'PUT',
@@ -113,13 +122,42 @@ export default function OrdersManagement() {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        
+        // Vérifier si l'email a été envoyé côté serveur
+        if (!result.emailSent) {
+          console.log('📧 Email non envoyé côté serveur, tentative côté client...');
+          
+          // Fallback intelligent : envoyer côté client seulement si nécessaire
+          try {
+            await sendOrderStatusUpdateEmail(
+              selectedOrder.customerInfo.email,
+              selectedOrder.orderNumber,
+              statusUpdate.status as any,
+              `${selectedOrder.customerInfo.firstName} ${selectedOrder.customerInfo.lastName}`
+            );
+            console.log('✅ Email de changement de statut envoyé côté client (fallback)');
+          } catch (emailErr) {
+            console.warn('⚠️ Impossible d\'envoyer l\'email côté client:', emailErr);
+            // Optionnel : afficher une notification à l'admin
+            alert('⚠️ Le statut a été mis à jour mais l\'email n\'a pas pu être envoyé au client. Veuillez le contacter manuellement.');
+          }
+        } else {
+          console.log('✅ Email envoyé avec succès côté serveur');
+        }
+
         // Recharger les commandes pour voir les changements
         await fetchOrders();
         
         setShowModal(false);
         setSelectedOrder(null);
         setStatusUpdate({ status: '', cancellationReason: '' });
-        alert('Statut de la commande mis à jour avec succès !');
+        
+        // Message de confirmation adapté
+        const message = result.emailSent 
+          ? 'Statut de la commande mis à jour avec succès ! Email envoyé au client.'
+          : 'Statut de la commande mis à jour avec succès !';
+        alert(message);
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erreur lors de la mise à jour');
@@ -215,15 +253,17 @@ export default function OrdersManagement() {
 
   const isLoading = loading || ordersLoading;
 
-  if (isLoading) {
-    return <AdminPageLoader />;
-  }
-
-  if (!user?.isAdmin) {
-    return null;
-  }
-
   return (
+    <AdminGuard>
+      {/* Affichage de chargement */}
+      {ordersLoading ? (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <AdminPageLoader />
+            <p className="mt-4 text-gray-600">Chargement des commandes...</p>
+          </div>
+        </div>
+      ) : (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <AdminNavigation />
       
@@ -566,6 +606,8 @@ export default function OrdersManagement() {
           </>
         )}
       </ResponsiveModal>
-    </div>
+      </div>
+      )}
+    </AdminGuard>
   );
 }

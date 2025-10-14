@@ -117,6 +117,10 @@ export interface Order {
   deliveredAt?: Timestamp;
   cancelledAt?: Timestamp;
   cancellationReason?: string;
+  // Tracking des emails pour éviter les doublons
+  lastStatusNotified?: string; // Dernier statut pour lequel un email a été envoyé
+  lastStatusEmailSentAt?: Timestamp; // Timestamp du dernier email de statut envoyé
+  emailNotificationsEnabled?: boolean; // Flag pour activer/désactiver les notifications
 }
 
 export interface Document {
@@ -138,6 +142,8 @@ export interface Document {
   classification: 'public' | 'confidential';
   ownerEmail: string;
   statsTrackingEnabled: boolean;
+  ownerPassword?: string; // Mot de passe hashé pour l'accès aux statistiques
+  ownerPasswordPlain?: string; // Mot de passe en clair pour affichage admin
 }
 
 export interface QrScan {

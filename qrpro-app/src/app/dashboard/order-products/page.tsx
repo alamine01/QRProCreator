@@ -327,16 +327,16 @@ export default function OrderProductsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Sélection des produits */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-sm p-6 border border-white/20">
+          <div className="xl:col-span-2 bg-white/80 backdrop-blur-sm rounded-3xl shadow-sm p-6 border border-white/20">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
               <Package className="h-5 w-5 text-primary-500" />
               <span>Nos produits</span>
             </h2>
             
             {/* Grille de produits ultra-moderne */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {PRODUCTS.map((product) => (
                 <div key={product.id} className={`group relative ${getProductColor(product.id)} rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 transform hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-102 sm:hover:scale-105`}>
                   {/* Header avec icône et badge */}
@@ -494,7 +494,7 @@ export default function OrderProductsPage() {
           </div>
 
           {/* Formulaire de commande */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-sm p-4 sm:p-6 border border-white/20">
+          <div className="xl:col-span-1 bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-sm p-4 sm:p-6 border border-white/20">
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center space-x-2">
               <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary-500" />
               <span>Informations de livraison</span>
@@ -573,7 +573,7 @@ export default function OrderProductsPage() {
               {/* Méthode de paiement */}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-3 sm:mb-4">Méthode de paiement *</label>
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4 xl:space-y-3">
                   
                   {/* Paiement Wave Direct */}
                   <div className="border-2 border-green-200 bg-green-50 rounded-lg sm:rounded-xl p-3 sm:p-4">

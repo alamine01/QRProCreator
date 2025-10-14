@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDocumentById } from '@/lib/firebase';
 import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { verifyPassword } from '@/lib/password';
 
 // GET /api/document-stats/[id] - Récupérer les statistiques d'un document
 export async function GET(
@@ -11,11 +12,16 @@ export async function GET(
   try {
     const { id } = await params;
     const email = request.nextUrl.searchParams.get('email');
+    const password = request.nextUrl.searchParams.get('password');
     
     console.log('📊 Demande de stats pour document:', id, 'email:', email);
     
     if (!email) {
       return NextResponse.json({ error: 'Email requis pour accéder aux statistiques' }, { status: 400 });
+    }
+    
+    if (!password) {
+      return NextResponse.json({ error: 'Mot de passe requis pour accéder aux statistiques' }, { status: 400 });
     }
     
     // Récupérer le document
@@ -38,18 +44,28 @@ export async function GET(
       return NextResponse.json({ error: 'Accès non autorisé - Email incorrect' }, { status: 403 });
     }
     
+    // Vérifier le mot de passe si le document en a un
+    if (document.ownerPassword) {
+      const isPasswordValid = await verifyPassword(password, document.ownerPassword);
+      if (!isPasswordValid) {
+        console.log('❌ Mot de passe incorrect pour:', email);
+        return NextResponse.json({ error: 'Accès non autorisé - Mot de passe incorrect' }, { status: 403 });
+      }
+      console.log('✅ Mot de passe correct pour:', email);
+    }
+    
     console.log('✅ Accès autorisé pour:', email);
     
     // Récupérer les scans QR réels depuis la collection qrScans
     let qrScans = [];
     try {
+      // Version simplifiée qui fonctionne (sans orderBy pour éviter les problèmes d'index)
       const qrScansQuery = query(
         collection(db, 'qrScans'),
         where('documentId', '==', id),
-        orderBy('timestamp', 'desc'),
         limit(50) // Limiter à 50 scans récents
       );
-      
+
       const qrScansSnapshot = await getDocs(qrScansQuery);
       qrScans = qrScansSnapshot.docs.map(doc => ({
         id: doc.id,
@@ -58,6 +74,13 @@ export async function GET(
         ip: doc.data().ip,
         location: doc.data().location
       }));
+      
+      // Trier manuellement côté client (plus fiable)
+      qrScans.sort((a, b) => {
+        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+        return dateB.getTime() - dateA.getTime();
+      });
       
       console.log(`📱 ${qrScans.length} scans QR trouvés pour le document ${id}`);
     } catch (qrScansError) {

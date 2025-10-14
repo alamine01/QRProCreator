@@ -20,21 +20,37 @@ export async function GET(request: NextRequest) {
 // PUT /api/admin/orders - Update order status
 export async function PUT(request: NextRequest) {
   try {
+    console.log('🚀 [API ADMIN] Début de la mise à jour de statut');
     const data = await request.json();
+    console.log('🚀 [API ADMIN] Données reçues:', data);
     
     if (data.id && data.status) {
-      await updateOrderStatus(
+      console.log('🚀 [API ADMIN] Appel de updateOrderStatus...');
+      const result = await updateOrderStatus(
         data.id, 
         data.status, 
         data.notes, 
         data.cancellationReason
       );
+      console.log('🚀 [API ADMIN] Résultat updateOrderStatus:', result);
 
-      // Retourner la commande mise à jour
+      if (!result.success) {
+        return NextResponse.json({ 
+          error: result.error || 'Erreur lors de la mise à jour du statut' 
+        }, { status: 500 });
+      }
+
+      // Retourner la commande mise à jour avec le statut d'email
       const orders = await getAllOrders();
       const updatedOrder = orders.find(order => order.id === data.id);
       
-      return NextResponse.json(updatedOrder);
+      return NextResponse.json({
+        order: updatedOrder,
+        emailSent: result.emailSent,
+        message: result.emailSent 
+          ? 'Statut mis à jour et email envoyé avec succès' 
+          : 'Statut mis à jour mais email non envoyé'
+      });
     }
     
     return NextResponse.json({ error: 'Missing order ID or status' }, { status: 400 });

@@ -549,14 +549,18 @@ export const createOrder = async (
 
     const docRef = await addDoc(collection(db, 'orders'), orderData);
     
-    // Envoyer une notification email de confirmation
-    await sendOrderConfirmationEmailToCustomer(
-      orderData.customerInfo.email, 
-      orderNumber, 
-      totalAmount,
-      `${orderData.customerInfo.firstName} ${orderData.customerInfo.lastName}`,
-      items
-    );
+    // Envoyer une notification email de confirmation (ne pas bloquer si ça échoue)
+    try {
+      await sendOrderConfirmationEmailToCustomer(
+        orderData.customerInfo.email, 
+        orderNumber, 
+        totalAmount,
+        `${orderData.customerInfo.firstName} ${orderData.customerInfo.lastName}`,
+        items
+      );
+    } catch (emailError) {
+      console.warn('⚠️ Email de confirmation échoué, mais commande créée:', emailError);
+    }
     
     return docRef.id;
   } catch (error) {
@@ -622,7 +626,7 @@ export const updateOrderStatus = async (
   status: Order['status'],
   notes?: string,
   cancellationReason?: string
-): Promise<void> => {
+): Promise<{ success: boolean; emailSent: boolean; error?: string }> => {
   try {
     const updateData: any = {
       status,
@@ -643,20 +647,63 @@ export const updateOrderStatus = async (
     }
     
     await updateDoc(doc(db, 'orders', orderId), updateData);
+    console.log('✅ Statut de commande mis à jour dans Firebase:', { orderId, status });
     
     // Envoyer une notification email de changement de statut
-    const order = await getOrderById(orderId);
-    if (order) {
-      await sendOrderStatusUpdateEmailToCustomer(
-        order.customerInfo.email, 
-        order.orderNumber, 
-        status,
-        `${order.customerInfo.firstName} ${order.customerInfo.lastName}`
-      );
+    let emailSent = false;
+    try {
+      const order = await getOrderById(orderId);
+      if (order) {
+        console.log('📧 [FIREBASE] Récupération des données de commande pour l\'email:', {
+          orderId,
+          customerEmail: order.customerInfo.email,
+          orderNumber: order.orderNumber,
+          customerName: `${order.customerInfo.firstName} ${order.customerInfo.lastName}`,
+          lastStatusNotified: order.lastStatusNotified,
+          newStatus: status,
+          hasEmail: !!order.customerInfo.email,
+          hasOrderNumber: !!order.orderNumber,
+          hasCustomerName: !!(order.customerInfo.firstName && order.customerInfo.lastName)
+        });
+        
+        // Vérifier si un email a déjà été envoyé pour ce statut
+        if (order.lastStatusNotified === status) {
+          console.log('⚠️ Email déjà envoyé pour ce statut, évitement du doublon');
+          emailSent = true; // Considéré comme "envoyé" pour éviter le fallback client
+        } else {
+          console.log('📧 [FIREBASE] Envoi de l\'email de changement de statut...');
+          
+          await sendOrderStatusUpdateEmailToCustomer(
+            order.customerInfo.email, 
+            order.orderNumber, 
+            status,
+            `${order.customerInfo.firstName} ${order.customerInfo.lastName}`
+          );
+          
+          console.log('📧 [FIREBASE] Mise à jour du tracking de l\'email...');
+          
+          // Mettre à jour le tracking de l'email
+          await updateDoc(doc(db, 'orders', orderId), {
+            lastStatusNotified: status,
+            lastStatusEmailSentAt: new Date()
+          });
+          
+          emailSent = true;
+          console.log('✅ [FIREBASE] Email de changement de statut envoyé et tracking mis à jour');
+        }
+      } else {
+        console.error('❌ Commande non trouvée pour l\'envoi d\'email:', orderId);
+      }
+    } catch (emailError) {
+      console.error('❌ Erreur lors de l\'envoi de l\'email de mise à jour:', emailError);
+      console.warn('⚠️ Le statut a été mis à jour mais l\'email n\'a pas pu être envoyé');
+      emailSent = false;
     }
+    
+    return { success: true, emailSent };
   } catch (error) {
     console.error('Erreur lors de la mise à jour du statut:', error);
-    throw error;
+    return { success: false, emailSent: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
   }
 };
 
@@ -690,17 +737,34 @@ const sendOrderConfirmationEmailToCustomer = async (email: string, orderNumber: 
     }));
     
     await sendOrderConfirmationEmail(email, orderNumber, totalAmount, customerName, items);
+    console.log('✅ Email de confirmation envoyé avec succès');
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email de confirmation:', error);
+    console.error('❌ Erreur lors de l\'envoi de l\'email de confirmation:', error);
+    console.warn('⚠️ L\'email de confirmation n\'a pas pu être envoyé, mais la commande sera créée');
+    // Ne pas relancer l'erreur pour ne pas bloquer la création de commande
   }
 };
 
 // Fonction pour envoyer un email de mise à jour de statut
 const sendOrderStatusUpdateEmailToCustomer = async (email: string, orderNumber: string, status: Order['status'], customerName: string): Promise<void> => {
   try {
-    await sendOrderStatusUpdateEmail(email, orderNumber, status, customerName);
+    console.log('📧 [SERVEUR] Email de changement de statut désactivé - on envoie seulement des confirmations');
+    // Pour simplifier, on n'envoie plus d'emails de changement de statut
+    // L'utilisateur recevra seulement l'email de confirmation initial
+    console.log('✅ [SERVEUR] Pas d\'email de changement de statut envoyé (fonctionnalité désactivée)');
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email de mise à jour:', error);
+    console.error('❌ [SERVEUR] Erreur lors de l\'envoi de l\'email de mise à jour:', error);
+    console.error('❌ [SERVEUR] Détails de l\'erreur:', {
+      errorType: typeof error,
+      errorMessage: error instanceof Error ? error.message : 'Erreur inconnue',
+      errorStack: error instanceof Error ? error.stack : undefined,
+      email,
+      orderNumber,
+      status,
+      customerName
+    });
+    console.warn('⚠️ [SERVEUR] L\'email de mise à jour n\'a pas pu être envoyé, mais le statut a été mis à jour');
+    // Ne pas relancer l'erreur pour ne pas bloquer la mise à jour de statut
   }
 };
 

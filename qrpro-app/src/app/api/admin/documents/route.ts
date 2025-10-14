@@ -4,6 +4,7 @@ import { getAllLocalDocuments, saveLocalDocument } from '@/lib/localStorage';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { generateQRCode } from '@/lib/qrcode';
+import { hashPassword } from '@/lib/password';
 
 // GET /api/admin/documents - Récupérer tous les documents
 export async function GET(request: NextRequest) {
@@ -60,6 +61,15 @@ export async function POST(request: NextRequest) {
     // Essayer Firebase d'abord
     console.log('💾 Tentative de sauvegarde Firebase...');
     try {
+      // Hasher le mot de passe si fourni
+      if (documentData.ownerPassword) {
+        console.log('🔐 Hashage du mot de passe...');
+        const plainPassword = documentData.ownerPassword;
+        documentData.ownerPassword = await hashPassword(plainPassword);
+        documentData.ownerPasswordPlain = plainPassword; // Garder le mot de passe en clair pour l'admin
+        console.log('✅ Mot de passe hashé');
+      }
+      
       const docId = await createDocument(documentData);
       console.log('✅ Document Firebase créé avec ID:', docId);
 
@@ -74,7 +84,8 @@ export async function POST(request: NextRequest) {
         downloadCount: 0,
         qrScanCount: 0,
         isActive: true,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        ownerPasswordPlain: documentData.ownerPasswordPlain // S'assurer que le mot de passe en clair est inclus
       };
 
       console.log('=== Document créé avec succès dans Firebase ===');

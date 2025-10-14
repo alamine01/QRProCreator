@@ -51,17 +51,18 @@ export default function DocumentStatsPage() {
   const [error, setError] = useState<string | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
   const [inputEmail, setInputEmail] = useState('');
+  const [inputPassword, setInputPassword] = useState('');
   const [verifying, setVerifying] = useState(false);
 
   const documentId = params?.id as string;
   const urlEmail = searchParams?.get('email');
 
-  const verifyEmail = useCallback(async (email: string) => {
-    if (!email || !documentId) return;
+  const verifyEmail = useCallback(async (email: string, password: string) => {
+    if (!email || !password || !documentId) return;
     
     setVerifying(true);
     try {
-      const response = await fetch(`/api/document-stats/${documentId}?email=${encodeURIComponent(email)}`);
+      const response = await fetch(`/api/document-stats/${documentId}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -97,7 +98,7 @@ export default function DocumentStatsPage() {
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    verifyEmail(inputEmail);
+    verifyEmail(inputEmail, inputPassword);
   };
 
   const formatDate = (timestamp: any) => {
@@ -211,9 +212,23 @@ export default function DocumentStatsPage() {
                 />
               </div>
 
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  Mot de passe
+                </label>
+                <input
+                  type="password"
+                  value={inputPassword}
+                  onChange={(e) => setInputPassword(e.target.value)}
+                  className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
+                  placeholder="Mot de passe"
+                  required
+                />
+              </div>
+
               <button
                 type="submit"
-                disabled={verifying || !inputEmail}
+                disabled={verifying || !inputEmail || !inputPassword}
                 className="w-full px-4 py-2 sm:py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs sm:text-sm lg:text-base"
               >
                 {verifying ? (
