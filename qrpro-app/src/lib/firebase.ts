@@ -1,5 +1,5 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, Auth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword, reauthenticateWithCredential, EmailAuthProvider, Auth, sendEmailVerification } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, orderBy, limit, deleteDoc, Firestore, Timestamp, increment } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
 import { User, Order, Product, OrderItem, CustomerInfo, PaymentInfo } from '@/types';
@@ -54,6 +54,49 @@ export const signInWithGoogle = async () => {
     return result.user;
   } catch (error) {
     console.error('Erreur de connexion Google:', error);
+    throw error;
+  }
+};
+
+// Fonction de connexion avec email/password
+export const signInWithEmailPassword = async (email: string, password: string) => {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return result.user;
+  } catch (error) {
+    console.error('Erreur de connexion email/password:', error);
+    throw error;
+  }
+};
+
+// Fonction d'inscription avec email/password
+export const createUserWithEmailPassword = async (email: string, password: string) => {
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    return result.user;
+  } catch (error) {
+    console.error('Erreur d\'inscription email/password:', error);
+    throw error;
+  }
+};
+
+// Fonction de changement de mot de passe
+export const changeUserPassword = async (currentPassword: string, newPassword: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user || !user.email) {
+      throw new Error('Utilisateur non connecté');
+    }
+
+    // Réauthentifier l'utilisateur avec le mot de passe actuel
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+
+    // Changer le mot de passe
+    await updatePassword(user, newPassword);
+    return true;
+  } catch (error) {
+    console.error('Erreur de changement de mot de passe:', error);
     throw error;
   }
 };

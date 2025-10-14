@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     console.log('🔒 [SECURITY API] Vérification admin:', {
       userId,
       email,
-      ip: request.ip || request.headers.get('x-forwarded-for'),
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       userAgent: request.headers.get('user-agent'),
       timestamp: new Date().toISOString()
     });

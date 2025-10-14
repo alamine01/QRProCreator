@@ -20,7 +20,8 @@ import {
   FaClock,
   FaTimesCircle,
   FaFileUpload,
-  FaDownload
+  FaDownload,
+  FaQrcode
 } from 'react-icons/fa';
 import { AdminPageLoader } from '@/components/ui/LoadingSpinner';
 
@@ -212,6 +213,13 @@ export default function AdminDashboard() {
             >
               <FaFileUpload className="mr-2" />
               Gérer les Documents
+            </button>
+            <button
+              onClick={() => router.push('/admin/stickers')}
+              className="flex items-center justify-center p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:opacity-90 transition-opacity"
+            >
+              <FaQrcode className="mr-2" />
+              Gérer les Autocollants
             </button>
           </div>
         </div>

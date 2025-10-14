@@ -64,9 +64,9 @@ export default function BusinessCardsManagement() {
 
   useEffect(() => {
     const filtered = businessCards.filter(card =>
-      card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      card.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      card.title.toLowerCase().includes(searchTerm.toLowerCase())
+      (card.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (card.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (card.title || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredCards(filtered);
   }, [businessCards, searchTerm]);
@@ -204,7 +204,7 @@ export default function BusinessCardsManagement() {
     // Vérifier si l'email existe déjà (validation côté client)
     const emailExists = businessCards.some(card => 
       card.email && 
-      card.email.toLowerCase() === formData.email?.toLowerCase() && 
+      (card.email || '').toLowerCase() === (formData.email || '').toLowerCase() && 
       card.id !== editingCard?.id
     );
 
@@ -439,11 +439,11 @@ export default function BusinessCardsManagement() {
                       {card.photoPath ? (
                         <img
                           src={card.photoPath}
-                          alt={card.name}
+                          alt={card.name || 'Photo de profil'}
                           className="w-12 h-12 rounded-full object-cover"
                           onError={(e) => {
                             console.error('❌ Erreur chargement image:', card.photoPath);
-                            console.error('❌ Carte:', card.name, card.id);
+                            console.error('❌ Carte:', card.name || 'Sans nom', card.id);
                           }}
                           onLoad={() => {
                             console.log('✅ Image chargée:', card.photoPath);
@@ -452,13 +452,13 @@ export default function BusinessCardsManagement() {
                       ) : (
                         <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
                           <span className="text-gray-600 font-medium text-lg">
-                            {card.name.charAt(0)}
+                            {(card.name || 'U').charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
                       <div className="ml-3">
-                        <h3 className="font-bold text-gray-900">{card.name}</h3>
-                        <p className="text-sm text-gray-500">{card.title}</p>
+                        <h3 className="font-bold text-gray-900">{card.name || 'Sans nom'}</h3>
+                        <p className="text-sm text-gray-500">{card.title || 'Sans titre'}</p>
                       </div>
                     </div>
                     <div className="flex space-x-2">
@@ -678,7 +678,7 @@ export default function BusinessCardsManagement() {
                         className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#F15A22] focus:border-transparent ${
                           formData.email && businessCards.some(card => 
                             card.email && 
-                            card.email.toLowerCase() === formData.email?.toLowerCase() && 
+                            (card.email || '').toLowerCase() === (formData.email || '').toLowerCase() && 
                             card.id !== editingCard?.id
                           ) ? 'border-red-500' : 'border-gray-300'
                         }`}
@@ -687,7 +687,7 @@ export default function BusinessCardsManagement() {
                       />
                       {formData.email && businessCards.some(card => 
                         card.email && 
-                        card.email.toLowerCase() === formData.email?.toLowerCase() && 
+                        (card.email || '').toLowerCase() === (formData.email || '').toLowerCase() && 
                         card.id !== editingCard?.id
                       ) && (
                         <p className="text-red-500 text-sm mt-1">

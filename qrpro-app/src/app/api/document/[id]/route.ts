@@ -63,7 +63,7 @@ export async function GET(
     // Fallback: chercher dans les documents locaux
     console.log('🔍 Recherche dans les documents locaux...');
     const localDocuments = getAllLocalDocuments();
-    const localDocument = localDocuments.find(doc => doc.id === id);
+    const localDocument = localDocuments.find((doc: any) => doc.id === id);
     
     if (localDocument && localDocument.isActive) {
       console.log('✅ Document local trouvé:', localDocument.name);

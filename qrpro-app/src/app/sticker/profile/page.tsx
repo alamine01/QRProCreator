@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { generateQRCode } from '@/lib/qrcode';
-import { downloadVCard } from '@/lib/vcard';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   QrCode,
   Download,
@@ -20,156 +18,101 @@ import {
   Star,
   Navigation as NavigationIcon,
   User,
-  Loader2,
-  Globe,
-  Building
+  Loader2
 } from 'lucide-react';
 
-export default function BusinessCardPublicProfile() {
-  const params = useParams();
-  const [businessCard, setBusinessCard] = useState<any>(null);
-  const [qrCode, setQrCode] = useState<string>('');
+interface ScanResult {
+  type: 'barcode' | 'profile';
+  barcode?: string;
+  randomProfile?: {
+    firstName: string;
+    lastName: string;
+    profession: string;
+    company: string;
+    phone: string;
+    email: string;
+    bio: string;
+  };
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    profession?: string;
+    phone?: string;
+    phoneSecondary?: string;
+    phoneThird?: string;
+    phoneFourth?: string;
+    profilePicture?: string;
+    profileSlug: string;
+    biography?: string;
+    address?: string;
+    location?: string;
+    linkedin?: string;
+    whatsapp?: string;
+    instagram?: string;
+    twitter?: string;
+    snapchat?: string;
+    facebook?: string;
+    youtube?: string;
+    tiktok?: string;
+    reviewLink?: string;
+  };
+  businessCard?: {
+    id: string;
+    name: string;
+    title: string;
+    company: string;
+    bio: string;
+    phonePrimary: string;
+    email: string;
+    location: string;
+    instagram?: string;
+    whatsapp?: string;
+    linkedin?: string;
+    facebook?: string;
+    twitter?: string;
+    snapchat?: string;
+    youtube?: string;
+    tiktok?: string;
+  };
+  assignedAt?: any;
+  createdAt?: any;
+}
+
+function StickerProfileContent() {
+  const searchParams = useSearchParams();
+  const qrCode = searchParams.get('qr');
+  
+  const [result, setResult] = useState<ScanResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadBusinessCard = async () => {
-      try {
-        const slug = params?.slug as string;
-        
-        if (slug) {
-          // Récupérer la carte de visite spécifique par slug
-          const response = await fetch(`/api/business-card/${slug}`);
-          if (response.ok) {
-            const card = await response.json();
-            setBusinessCard(card);
-            
-            // Générer le QR code pour cette page
-            const profileUrl = `${window.location.origin}/business-card/${slug}`;
-            try {
-              const qrCodeData = await generateQRCode(profileUrl);
-              setQrCode(qrCodeData);
-            } catch (qrError) {
-              console.error('Erreur lors de la génération du QR code:', qrError);
-            }
-          } else if (response.status === 404) {
-            console.log('Carte de visite non trouvée pour le slug:', slug);
-          } else {
-            console.error('Erreur lors de la récupération de la carte:', response.status);
-          }
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement de la carte de visite:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadBusinessCard();
-  }, [params?.slug]);
-
-  const handleDownloadVCard = () => {
-    if (businessCard) {
-      // Convertir la carte de visite en format utilisateur pour la vCard
-      const userData = {
-        firstName: businessCard.name?.split(' ')[0] || '',
-        lastName: businessCard.name?.split(' ').slice(1).join(' ') || '',
-        email: businessCard.email || '',
-        phone: businessCard.phonePrimary || '',
-        phoneSecondary: businessCard.phoneSecondary || '',
-        address: businessCard.address || '',
-        profession: businessCard.title || '',
-        company: businessCard.company || '',
-        website: businessCard.website || '',
-        instagram: businessCard.instagram || '',
-        facebook: businessCard.facebook || '',
-        linkedin: businessCard.linkedin || '',
-        twitter: businessCard.twitter || '',
-        whatsapp: businessCard.whatsapp || '',
-        youtube: businessCard.youtube || '',
-        tiktok: businessCard.tiktok || '',
-        snapchat: businessCard.snapchat || '',
-        biography: businessCard.bio || '',
-        location: businessCard.location || '',
-        reviewLink: businessCard.reviewLink || ''
-      };
-      
-      downloadVCard(userData as any, businessCard.id);
-    }
-  };
-
-  const handlePrintQR = () => {
     if (qrCode) {
-      const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>QR Code - ${businessCard?.name || 'Carte de Visite'}</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            body {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              min-height: 100vh;
-              margin: 0;
-              padding: 20px;
-              font-family: Arial, sans-serif;
-            }
-            .container {
-              text-align: center;
-            }
-            .qr-code {
-              margin-bottom: 20px;
-            }
-            .info {
-              margin-top: 20px;
-            }
-            @media print {
-              body {
-                min-height: auto;
-                padding: 0;
-              }
-              .container {
-                page-break-inside: avoid;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="qr-code">
-              <img src="${qrCode}" alt="QR Code" style="width: 200px; height: 200px;" />
-            </div>
-            <div class="info">
-              <h2 style="margin: 0;">${businessCard?.name || 'Carte de Visite'}</h2>
-              ${businessCard?.title ? `<p style="margin: 5px 0; color: #666;">${businessCard.title}</p>` : ''}
-              ${businessCard?.company ? `<p style="margin: 5px 0; color: #666;">${businessCard.company}</p>` : ''}
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
+      scanQRCode();
+    } else {
+      setError('Code QR manquant');
+      setLoading(false);
+    }
+  }, [qrCode]);
 
-      const blob = new Blob([printContent], { type: 'text/html' });
-      const printUrl = URL.createObjectURL(blob);
-      const printFrame = document.createElement('iframe');
-      printFrame.style.display = 'none';
-      document.body.appendChild(printFrame);
-
-      printFrame.src = printUrl;
-      printFrame.onload = function() {
-        try {
-          printFrame.contentWindow?.print();
-          setTimeout(() => {
-            document.body.removeChild(printFrame);
-            URL.revokeObjectURL(printUrl);
-          }, 1000);
-        } catch (e) {
-          console.error('Print failed:', e);
-          alert('Impossible d\'imprimer. Veuillez essayer de sauvegarder en PDF.');
-        }
-      };
+  const scanQRCode = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/sticker/scan?qr=${qrCode}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setResult(data);
+      } else {
+        setError(data.error || 'Erreur lors du scan');
+      }
+    } catch (error) {
+      console.error('Erreur lors du scan:', error);
+      setError('Erreur de connexion');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -181,26 +124,103 @@ export default function BusinessCardPublicProfile() {
     );
   }
 
-  if (!businessCard) {
+  if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Carte de visite non trouvée
+            Erreur
           </h1>
           <p className="text-gray-600 mb-8">
-            La carte de visite que vous recherchez n'existe pas ou a été supprimée.
+            {error}
           </p>
-          <a
-            href="/"
+          <button
+            onClick={() => window.close()}
             className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
-            Retour à l'accueil
-          </a>
+            Fermer
+          </button>
         </div>
       </div>
     );
   }
+
+  if (!result) {
+    return null;
+  }
+
+  // Si c'est un code-barres (autocollant non assigné)
+  if (result.type === 'barcode') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            {/* Profile Header */}
+            <div className="relative h-32 bg-gradient-to-r from-primary-500 to-primary-600">
+              <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+                <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center">
+                  <QrCode className="w-12 h-12 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Info */}
+            <div className="pt-16 px-6 pb-6">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Autocollant Disponible
+                </h1>
+                <p className="text-blue-600 font-medium mt-1">Code-barres: {result.barcode}</p>
+              </div>
+
+              {/* Code-barres pour identification */}
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+                  Code-barres pour identification
+                </h3>
+                <div className="bg-white border-2 border-gray-300 rounded-lg p-4 mb-4">
+                  <span className="text-2xl font-mono tracking-wider block text-center">
+                    {result.barcode}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 text-center">
+                  Utilisez ce code-barres pour identifier rapidement cet autocollant
+                </p>
+              </div>
+
+              {/* Profil aléatoire généré */}
+              {result.randomProfile && (
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Profil aléatoire généré</h3>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <User className="w-4 h-4 text-gray-500 mr-2" />
+                      <span className="font-medium">
+                        {result.randomProfile.firstName} {result.randomProfile.lastName}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center mb-2">
+                      <Briefcase className="w-4 h-4 text-gray-500 mr-2" />
+                      <span className="text-sm text-gray-600">
+                        {result.randomProfile.profession} - {result.randomProfile.company}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">
+                      {result.randomProfile.bio}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si c'est un profil assigné - utiliser exactement le même design que /pro/[slug]
+  const profileUser = result.user;
+  const businessCard = result.businessCard;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -211,16 +231,16 @@ export default function BusinessCardPublicProfile() {
             {/* Profile Header */}
             <div className="relative h-32 bg-gradient-to-r from-primary-500 to-primary-600">
               <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
-                {businessCard.photoPath ? (
+                {profileUser?.profilePicture ? (
                   <img 
-                    src={businessCard.photoPath} 
-                    alt={businessCard.name || 'Carte de Visite'}
+                    src={profileUser.profilePicture} 
+                    alt={`${profileUser?.firstName || businessCard?.name || 'Utilisateur'} ${profileUser?.lastName || ''}`}
                     className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-lg"
                   />
                 ) : (
                   <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center">
                     <span className="text-3xl font-bold text-gray-400">
-                      {(businessCard.name?.[0] || 'C')}
+                      {(profileUser?.firstName?.[0] || businessCard?.name?.[0] || 'U')}{(profileUser?.lastName?.[0] || 'U')}
                     </span>
                   </div>
                 )}
@@ -231,38 +251,59 @@ export default function BusinessCardPublicProfile() {
             <div className="pt-16 px-6 pb-6">
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {businessCard.name || 'Carte de Visite'}
+                  {profileUser?.firstName || businessCard?.name || 'Utilisateur'} {profileUser?.lastName || ''}
                 </h1>
-                {businessCard.title && (
-                  <p className="text-blue-600 font-medium mt-1">{businessCard.title}</p>
-                )}
-                {businessCard.company && (
-                  <p className="text-gray-600 text-sm mt-1">{businessCard.company}</p>
+                {(businessCard?.title || profileUser?.profession) && (
+                  <p className="text-blue-600 font-medium mt-1">{businessCard?.title || profileUser?.profession}</p>
                 )}
               </div>
 
               {/* Contact Information */}
               <div className="mt-6 space-y-4">
                 {/* Primary Phone */}
-                {businessCard.phonePrimary && (
+                {(businessCard?.phonePrimary || profileUser?.phone) && (
                   <div className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500">
                       <Phone className="h-5 w-5" />
                     </div>
-                    <a href={`tel:${businessCard.phonePrimary}`} className="ml-3 text-gray-700 hover:text-blue-600 transition">
-                      {businessCard.phonePrimary} (Principal)
+                    <a href={`tel:${businessCard?.phonePrimary || profileUser?.phone}`} className="ml-3 text-gray-700 hover:text-blue-600 transition">
+                      {businessCard?.phonePrimary || profileUser?.phone} (Principal)
                     </a>
                   </div>
                 )}
 
                 {/* Secondary Phone */}
-                {businessCard.phoneSecondary && (
+                {profileUser?.phoneSecondary && (
                   <div className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500">
                       <Phone className="h-5 w-5" />
                     </div>
-                    <a href={`tel:${businessCard.phoneSecondary}`} className="ml-3 text-gray-700 hover:text-blue-600 transition">
-                      {businessCard.phoneSecondary}
+                    <a href={`tel:${profileUser.phoneSecondary}`} className="ml-3 text-gray-700 hover:text-blue-600 transition">
+                      {profileUser.phoneSecondary}
+                    </a>
+                  </div>
+                )}
+
+                {/* Third Phone */}
+                {profileUser?.phoneThird && (
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500">
+                      <Phone className="h-5 w-5" />
+                    </div>
+                    <a href={`tel:${profileUser.phoneThird}`} className="ml-3 text-gray-700 hover:text-blue-600 transition">
+                      {profileUser.phoneThird}
+                    </a>
+                  </div>
+                )}
+
+                {/* Fourth Phone */}
+                {profileUser?.phoneFourth && (
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500">
+                      <Phone className="h-5 w-5" />
+                    </div>
+                    <a href={`tel:${profileUser.phoneFourth}`} className="ml-3 text-gray-700 hover:text-blue-600 transition">
+                      {profileUser.phoneFourth}
                     </a>
                   </div>
                 )}
@@ -272,74 +313,69 @@ export default function BusinessCardPublicProfile() {
                   <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500">
                     <Mail className="h-5 w-5" />
                   </div>
-                  <a href={`mailto:${businessCard.email}`} className="ml-3 text-gray-700 hover:text-blue-600 transition">
-                    {businessCard.email}
+                  <a href={`mailto:${businessCard?.email || profileUser?.email}`} className="ml-3 text-gray-700 hover:text-blue-600 transition">
+                    {businessCard?.email || profileUser?.email}
                   </a>
                 </div>
 
-                {/* Website */}
-                {businessCard.website && (
-                  <div className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500">
-                      <Globe className="h-5 w-5" />
-                    </div>
-                    <a href={businessCard.website} target="_blank" rel="noopener noreferrer" className="ml-3 text-gray-700 hover:text-blue-600 transition">
-                      {businessCard.website}
-                    </a>
-                  </div>
-                )}
-
                 {/* Address */}
-                {businessCard.address && (
+                {(profileUser?.address || businessCard?.location) && (
                   <div className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500">
                       <MapPin className="h-5 w-5" />
                     </div>
-                    <span className="ml-3 text-gray-700">{businessCard.address}</span>
-                  </div>
-                )}
-
-                {/* Location */}
-                {businessCard.location && (
-                  <div className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500">
-                      <NavigationIcon className="h-5 w-5" />
-                    </div>
-                    <span className="ml-3 text-gray-700">{businessCard.location}</span>
-                  </div>
-                )}
-
-                {/* Maps Link */}
-                {businessCard.mapsLink && (
-                  <div className="mt-6">
-                    <a 
-                      href={businessCard.mapsLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center px-4 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition duration-200"
-                    >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500 mr-3">
-                        <NavigationIcon className="h-5 w-5" />
-                      </div>
-                      <span className="text-blue-600 font-medium">Naviguer vers l'emplacement</span>
-                    </a>
+                    <span className="ml-3 text-gray-700">{profileUser?.address || businessCard?.location}</span>
                   </div>
                 )}
               </div>
 
+              {/* Map */}
+              {(businessCard?.location || profileUser?.location) && (
+                <div className="mt-6">
+                  <a 
+                    href={businessCard?.location || profileUser?.location} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center px-4 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition duration-200"
+                  >
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500/10 text-primary-500 mr-3">
+                      <NavigationIcon className="h-5 w-5" />
+                    </div>
+                    <span className="text-blue-600 font-medium">Naviguer vers l'emplacement</span>
+                  </a>
+                </div>
+              )}
+
+              {/* Review Link */}
+              {profileUser?.reviewLink && (
+                <div className="mt-6">
+                  <a 
+                    href={profileUser.reviewLink} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center px-4 py-3 rounded-lg bg-yellow-50 hover:bg-yellow-100 transition duration-200"
+                  >
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 mr-3">
+                      <Star className="h-5 w-5" />
+                    </div>
+                    <span className="text-yellow-600 font-medium">Laisser un avis</span>
+                  </a>
+                </div>
+              )}
+
               {/* Biography */}
-              {businessCard.bio && (
+              {(businessCard?.bio || profileUser?.biography) && (
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">À propos</h3>
-                  <p className="text-gray-700 leading-relaxed">{businessCard.bio}</p>
+                  <p className="text-gray-700 leading-relaxed">{businessCard?.bio || profileUser?.biography}</p>
                 </div>
               )}
 
               {/* Social Media Links */}
               <div className="mt-6 flex justify-center space-x-4">
-                {businessCard.instagram && (
+                {(businessCard?.instagram || profileUser?.instagram) && (
                   <a 
-                    href={businessCard.instagram} 
+                    href={businessCard?.instagram || profileUser?.instagram} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 text-white hover:opacity-90 transition"
@@ -348,9 +384,9 @@ export default function BusinessCardPublicProfile() {
                   </a>
                 )}
 
-                {businessCard.whatsapp && (
+                {(businessCard?.whatsapp || profileUser?.whatsapp) && (
                   <a 
-                    href={`https://wa.me/${businessCard.whatsapp.replace(/[^\d+]/g, '')}`} 
+                    href={`https://wa.me/${(businessCard?.whatsapp || profileUser?.whatsapp || '').replace(/[^\d+]/g, '')}`} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-green-500 text-white hover:opacity-90 transition"
@@ -361,9 +397,9 @@ export default function BusinessCardPublicProfile() {
                   </a>
                 )}
 
-                {businessCard.facebook && (
+                {(businessCard?.facebook || profileUser?.facebook) && (
                   <a 
-                    href={businessCard.facebook} 
+                    href={businessCard?.facebook || profileUser?.facebook} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white hover:opacity-90 transition"
@@ -372,9 +408,9 @@ export default function BusinessCardPublicProfile() {
                   </a>
                 )}
 
-                {businessCard.linkedin && (
+                {(businessCard?.linkedin || profileUser?.linkedin) && (
                   <a 
-                    href={businessCard.linkedin} 
+                    href={businessCard?.linkedin || profileUser?.linkedin} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-700 text-white hover:opacity-90 transition"
@@ -383,9 +419,9 @@ export default function BusinessCardPublicProfile() {
                   </a>
                 )}
 
-                {businessCard.twitter && (
+                {(businessCard?.twitter || profileUser?.twitter) && (
                   <a 
-                    href={businessCard.twitter} 
+                    href={businessCard?.twitter || profileUser?.twitter} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-400 text-white hover:opacity-90 transition"
@@ -394,9 +430,9 @@ export default function BusinessCardPublicProfile() {
                   </a>
                 )}
 
-                {businessCard.youtube && (
+                {(businessCard?.youtube || profileUser?.youtube) && (
                   <a 
-                    href={businessCard.youtube} 
+                    href={businessCard?.youtube || profileUser?.youtube} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-red-600 text-white hover:opacity-90 transition"
@@ -407,9 +443,9 @@ export default function BusinessCardPublicProfile() {
                   </a>
                 )}
 
-                {businessCard.tiktok && (
+                {(businessCard?.tiktok || profileUser?.tiktok) && (
                   <a 
-                    href={businessCard.tiktok} 
+                    href={businessCard?.tiktok || profileUser?.tiktok} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-white hover:opacity-90 transition"
@@ -420,9 +456,9 @@ export default function BusinessCardPublicProfile() {
                   </a>
                 )}
 
-                {businessCard.snapchat && (
+                {(businessCard?.snapchat || profileUser?.snapchat) && (
                   <a 
-                    href={businessCard.snapchat} 
+                    href={businessCard?.snapchat || profileUser?.snapchat} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-400 text-white hover:opacity-90 transition"
@@ -452,60 +488,53 @@ export default function BusinessCardPublicProfile() {
               {/* Admin View with QR Code */}
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Partager la Carte</h2>
               <div className="flex flex-col items-center justify-center mb-6">
-                {qrCode ? (
-                  <img src={qrCode} alt="QR Code" className="w-32 h-32 mb-2" />
-                ) : (
-                  <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center mb-2">
-                    <QrCode className="h-16 w-16 text-gray-400" />
-                  </div>
-                )}
+                <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center mb-2">
+                  <QrCode className="h-16 w-16 text-gray-400" />
+                </div>
                 <p className="text-base font-medium text-gray-900 mt-2">
-                  {businessCard.name || 'Carte de Visite'}
+                  {profileUser?.firstName || businessCard?.name || 'Utilisateur'} {profileUser?.lastName || ''}
                 </p>
-                {businessCard.title && (
-                  <p className="text-sm text-gray-500">{businessCard.title}</p>
+                {(businessCard?.title || profileUser?.profession) && (
+                  <p className="text-sm text-gray-500">{businessCard?.title || profileUser?.profession}</p>
                 )}
-                {businessCard.company && (
-                  <p className="text-sm text-gray-500">{businessCard.company}</p>
-                )}
-              </div>
-              <div className="space-y-3">
-                <button 
-                  onClick={handlePrintQR}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                  </svg>
-                  Imprimer le Code QR
-                </button>
               </div>
 
-              {/* vCard Download Button */}
-              <button 
-                onClick={handleDownloadVCard}
-                className="w-full flex flex-col items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-500 hover:opacity-90 transition-colors duration-200 mt-4"
-              >
-                <Download className="h-6 w-6 mb-1" />
-                <span>Enregistrer dans les Contacts</span>
-                <div className="flex items-center space-x-2 mt-1">
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                  </svg>
-                  <span className="text-xs opacity-90">&</span>
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-7.8212c.0007-.0028.001-.0056.001-.0084 0-.5511-.4482-.9993-.9993-.9993-.5511 0-.9993.4482-.9993.9993 0 .0028.0003.0056.001.0084l-1.9973 7.8212zm-11.4045 0l-1.9973-7.8212c-.0007-.0028-.001-.0056-.001-.0084 0-.5511.4482-.9993.9993-.9993s.9993.4482.9993.9993c0 .0028-.0003.0056-.001.0084l1.9973 7.8212z"/>
-                  </svg>
+              {/* Informations QR */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Informations QR</h3>
+                <div className="text-xs text-gray-600 space-y-1">
+                  <div>QR Code: {qrCode}</div>
+                  {result.assignedAt && (
+                    <div>Assigné le: {result.assignedAt.toDate?.()?.toLocaleDateString() || 'N/A'}</div>
+                  )}
+                  {result.createdAt && (
+                    <div>Créé le: {result.createdAt.toDate?.()?.toLocaleDateString() || 'N/A'}</div>
+                  )}
                 </div>
-              </button>
+              </div>
 
               <p className="text-xs text-gray-500 mt-3">
-                Cela créera une fiche de contact complète avec toutes les coordonnées, les liens sociaux et les informations de localisation.
+                Profil généré automatiquement depuis l'autocollant QR.
               </p>
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StickerProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <StickerProfileContent />
+    </Suspense>
   );
 }

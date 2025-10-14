@@ -57,7 +57,7 @@ export async function GET(
     console.log('✅ Accès autorisé pour:', email);
     
     // Récupérer les scans QR réels depuis la collection qrScans
-    let qrScans = [];
+    let qrScans: any[] = [];
     try {
       // Version simplifiée qui fonctionne (sans orderBy pour éviter les problèmes d'index)
       const qrScansQuery = query(
@@ -84,7 +84,7 @@ export async function GET(
       
       console.log(`📱 ${qrScans.length} scans QR trouvés pour le document ${id}`);
     } catch (qrScansError) {
-      console.log('⚠️ Collection qrScans non accessible ou vide:', qrScansError.message);
+      console.log('⚠️ Collection qrScans non accessible ou vide:', qrScansError instanceof Error ? qrScansError.message : 'Unknown error');
       console.log('📱 Utilisation de données vides pour les scans QR');
       qrScans = [];
     }

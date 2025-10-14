@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Timestamp } from 'firebase/firestore';
-import { auth, getUserProfile, createUserProfile, saveUserProfile } from '@/lib/firebase';
+import { auth, getUserProfile, createUserProfile, saveUserProfile, db } from '@/lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -34,10 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setFirebaseUser(firebaseUser);
 
-      if (firebaseUser) {
-        try {
-          // Essayer de récupérer le profil existant depuis Firestore
-          let userData = await getUserProfile(firebaseUser.uid);
+        if (firebaseUser) {
+          try {
+            // Essayer de récupérer le profil existant depuis Firestore
+            let userData = await getUserProfile(firebaseUser.uid);
           
           if (!userData) {
             // Si aucun profil n'existe, créer un nouveau profil
@@ -55,14 +56,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               lastName
             });
 
+            // Générer un slug unique pour le profil
+            const baseSlug = firebaseUser.email?.split('@')[0] || 'user';
+            let profileSlug = baseSlug;
+            let counter = 1;
+            
+            // Vérifier l'unicité du slug
+            while (true) {
+              const slugQuery = query(
+                collection(db, 'users'),
+                where('profileSlug', '==', profileSlug)
+              );
+              const slugSnapshot = await getDocs(slugQuery);
+              
+              if (slugSnapshot.empty) break;
+              
+              profileSlug = `${baseSlug}-${counter}`;
+              counter++;
+            }
+
             userData = {
               id: firebaseUser.uid,
-              googleId: firebaseUser.uid,
+              googleId: firebaseUser.providerData[0]?.providerId === 'google.com' ? firebaseUser.uid : '',
               email: firebaseUser.email || '',
               firstName: firstName,
               lastName: lastName,
-              profilePicture: firebaseUser.photoURL || undefined,
-              profileSlug: firebaseUser.email?.split('@')[0] || '',
+              profilePicture: firebaseUser.photoURL || '',
+              profileSlug: profileSlug,
               profession: '',
               phone: '',
               phoneSecondary: '',
@@ -92,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('Profil utilisateur récupéré depuis Firestore');
           }
 
+
           setUser(userData);
           // ADMIN SPÉCIFIQUE: bahmouhamedalamine@gmail.com
           const isSpecificAdmin = userData.email === 'bahmouhamedalamine@gmail.com';
@@ -113,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: firebaseUser.email || '',
             firstName: firstName,
             lastName: lastName,
-            profilePicture: firebaseUser.photoURL || undefined,
+            profilePicture: firebaseUser.photoURL || '',
             profileSlug: firebaseUser.email?.split('@')[0] || '',
             profession: '',
             phone: '',

@@ -9,13 +9,7 @@ import { User, LogOut, QrCode, Settings, Users } from 'lucide-react';
 export function Navigation() {
   const { user, firebaseUser, loading, isAdmin, logout } = useAuth();
 
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error('Error signing in:', error);
-    }
-  };
+  // Redirection vers la page de connexion au lieu d'appeler directement Google
 
   return (
     <nav className="glass-effect sticky top-0 z-50 p-4">
@@ -64,13 +58,13 @@ export function Navigation() {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={handleSignIn}
+              <Link
+                href="/auth/signin"
                 className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
               >
                 <User className="h-4 w-4" />
                 <span>Se connecter</span>
-              </button>
+              </Link>
             )}
           </div>
         </div>

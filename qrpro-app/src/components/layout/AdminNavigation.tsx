@@ -12,6 +12,7 @@ import {
   FaShoppingCart, 
   FaCreditCard,
   FaFileUpload,
+  FaQrcode,
   FaArrowLeft,
   FaCog,
   FaBars,
@@ -60,6 +61,13 @@ const adminNavItems = [
     icon: FaFileUpload,
     description: 'Upload et gestion des documents',
     preloadPage: 'documents' as const
+  },
+  {
+    name: 'Autocollants',
+    href: '/admin/stickers',
+    icon: FaQrcode,
+    description: 'Gestion du stock d\'autocollants',
+    preloadPage: 'stickers' as const
   }
 ];
 

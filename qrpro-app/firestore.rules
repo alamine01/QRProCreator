@@ -30,5 +30,10 @@ service cloud.firestore {
       allow read: if true; // Accès public en lecture
       allow write: if request.auth != null;
     }
+    
+    // Règles pour les autocollants (temporairement ouvertes pour les tests)
+    match /stickers/{stickerId} {
+      allow read, write: if true; // Accès total temporaire pour les tests
+    }
   }
 }

@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   console.log('🔒 [SECURITY] Tentative d\'accès:', {
     path: pathname,
     method: request.method,
-    ip: request.ip || request.headers.get('x-forwarded-for'),
+    ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
     userAgent: request.headers.get('user-agent'),
     timestamp: new Date().toISOString()
   });

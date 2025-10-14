@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AdminNavigation } from '@/components/layout/AdminNavigation';
-import { ResponsiveCardGrid } from '@/components/ui/ResponsiveCardGrid';
-import { ResponsiveModal } from '@/components/ui/ResponsiveModal';
+import ResponsiveCardGrid from '@/components/ui/ResponsiveCardGrid';
+import ResponsiveModal from '@/components/ui/ResponsiveModal';
 import { 
   FaArrowLeft,
   FaSearch,

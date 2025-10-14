@@ -12,7 +12,7 @@ export async function POST(
     // Récupérer les informations de la requête
     const userAgent = request.headers.get('user-agent') || 'Unknown';
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : request.ip || 'Unknown';
+    const ip = forwarded ? forwarded.split(',')[0] : 'Unknown';
     
     console.log(`📱 Nouveau scan QR pour document: ${id}`);
     console.log(`🌐 User Agent: ${userAgent}`);
@@ -76,7 +76,7 @@ export async function GET(
     // Récupérer les informations de la requête
     const userAgent = request.headers.get('user-agent') || 'Unknown';
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : request.ip || 'Unknown';
+    const ip = forwarded ? forwarded.split(',')[0] : 'Unknown';
     
     console.log(`📱 Scan QR GET pour document: ${id}`);
 

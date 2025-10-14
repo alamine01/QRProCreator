@@ -29,6 +29,11 @@ export interface User {
   isAdmin: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  // Champs pour les comptes créés manuellement
+  passwordHash?: string; // Mot de passe hashé
+  tempPassword?: string; // Mot de passe temporaire en clair pour affichage admin
+  mustChangePassword?: boolean; // Force le changement de mot de passe à la première connexion
+  accountType?: 'google' | 'manual'; // Type de compte (Google ou manuel)
 }
 
 export interface BusinessCard {
@@ -153,6 +158,47 @@ export interface QrScan {
   userAgent?: string;
   ip?: string;
   location?: string;
+}
+
+export interface Sticker {
+  id: string;
+  qrCode: string; // QR code unique fixe
+  barcode: string; // Code-barres virtuel pour identification
+  status: 'available' | 'assigned'; // Disponible ou assigné
+  assignedUserId?: string; // ID de l'utilisateur si assigné
+  assignedAt?: Timestamp; // Date d'assignation
+  createdAt: Timestamp;
+  // Profil aléatoire généré
+  randomProfile: {
+    firstName: string;
+    lastName: string;
+    profession: string;
+    company: string;
+    phone: string;
+    email: string;
+    bio: string;
+    avatar?: string;
+  };
+}
+
+// Interfaces pour l'authentification
+export interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+export interface RegisterFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordFormData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface Toast {

@@ -14,6 +14,7 @@
     "@types/qrcode": "^1.5.5",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.2",
+    "critters": "^0.0.23",
     "firebase": "^12.4.0",
     "lucide-react": "^0.545.0",
     "next": "15.5.4",
