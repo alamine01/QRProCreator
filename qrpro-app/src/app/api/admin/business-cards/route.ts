@@ -42,6 +42,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newCard);
   } catch (error) {
     console.error('Error creating business card:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Erreur inconnue'
+    }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
-import { Timestamp } from 'firebase/firestore';
+// Type pour éviter l'import direct de Firebase
+export type Timestamp = any;
 
 export interface User {
   id: string;

@@ -1,21 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-@import "tailwindcss";
-
-@theme {
-  --color-primary-50: #fef7ee;
-  --color-primary-100: #fdedd6;
-  --color-primary-200: #fbd7ac;
-  --color-primary-300: #f8bb77;
-  --color-primary-400: #f59540;
-  --color-primary-500: #f2731a;
-  --color-primary-600: #e35a0f;
-  --color-primary-700: #bc4310;
-  --color-primary-800: #963614;
-  --color-primary-900: #792f14;
-  --font-family-sans: 'Inter', sans-serif;
-  --animate-fade-in: fadeIn 0.5s ease-in-out;
-  --animate-slide-up: slideUp 0.3s ease-out;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @keyframes fadeIn {
   0% { opacity: 0; }

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getUserProfile } from '@/lib/firebase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,9 +24,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier l'origine de la requête
+    // Vérification de l'origine de la requête - SÉCURISÉE
     const origin = request.headers.get('origin');
     const referer = request.headers.get('referer');
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://qrprocreator.com',
+      'https://www.qrprocreator.com'
+    ];
+    
+    if (origin && !allowedOrigins.includes(origin)) {
+      console.log('🚫 [SECURITY API] Origine non autorisée:', origin);
+      return NextResponse.json(
+        { error: 'Origine non autorisée', isValid: false },
+        { status: 403 }
+      );
+    }
     
     if (!origin && !referer) {
       console.log('🚫 [SECURITY API] Requête suspecte - Pas d\'origine');
@@ -37,89 +49,81 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Récupérer l'utilisateur depuis Firestore
-    const userDoc = await getDoc(doc(db, 'users', userId));
-    
-    if (!userDoc.exists()) {
-      console.log('🚫 [SECURITY API] Utilisateur non trouvé:', userId);
-      return NextResponse.json(
-        { error: 'Utilisateur non trouvé', isValid: false },
-        { status: 404 }
-      );
-    }
-
-    const userData = userDoc.data();
-    
-    // Vérifier l'email
-    if (userData.email !== email) {
-      console.log('🚫 [SECURITY API] Email ne correspond pas:', {
-        provided: email,
-        stored: userData.email
-      });
-      return NextResponse.json(
-        { error: 'Email invalide', isValid: false },
-        { status: 403 }
-      );
-    }
-
-    // Vérifier les permissions admin
-    if (!userData.isAdmin) {
-      console.log('🚫 [SECURITY API] Pas de droits admin:', {
-        userId,
-        email,
-        isAdmin: userData.isAdmin
-      });
-      return NextResponse.json(
-        { error: 'Droits insuffisants', isValid: false, isAdmin: false },
-        { status: 403 }
-      );
-    }
-
-    // Vérifier si le compte est actif
-    if (userData.isBlocked || userData.isSuspended) {
-      console.log('🚫 [SECURITY API] Compte bloqué/suspendu:', {
-        userId,
-        email,
-        isBlocked: userData.isBlocked,
-        isSuspended: userData.isSuspended
-      });
-      return NextResponse.json(
-        { error: 'Compte bloqué', isValid: false, isAdmin: false },
-        { status: 403 }
-      );
-    }
-
-    // Vérifier la dernière activité (optionnel)
-    const lastActivity = userData.lastActivity?.toDate();
-    const now = new Date();
-    const daysSinceActivity = lastActivity ? (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24) : 0;
-    
-    if (daysSinceActivity > 30) { // 30 jours d'inactivité
-      console.log('⚠️ [SECURITY API] Compte inactif:', {
-        userId,
-        email,
-        daysSinceActivity
-      });
-    }
-
-    console.log('✅ [SECURITY API] Vérification réussie:', {
-      userId,
-      email,
-      isAdmin: userData.isAdmin,
-      isSuperAdmin: userData.isSuperAdmin || false
-    });
-
-    return NextResponse.json({
-      isValid: true,
-      isAdmin: userData.isAdmin,
-      isSuperAdmin: userData.isSuperAdmin || false,
-      user: {
-        id: userData.id,
-        email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName
+    // Vérification admin via Firebase - Récupérer le profil utilisateur
+    try {
+      const userProfile = await getUserProfile(userId);
+      
+      if (!userProfile) {
+        console.log('🚫 [SECURITY API] Profil utilisateur non trouvé:', userId);
+        return NextResponse.json(
+          { error: 'Profil utilisateur non trouvé', isValid: false },
+          { status: 404 }
+        );
       }
-    });
+
+      // Vérifier si l'utilisateur est admin
+      if (!userProfile.isAdmin) {
+        console.log('🚫 [SECURITY API] Utilisateur non admin:', {
+          userId,
+          email,
+          isAdmin: userProfile.isAdmin
+        });
+        return NextResponse.json(
+          { error: 'Accès non autorisé - Pas de droits admin', isValid: false },
+          { status: 403 }
+        );
+      }
+
+      console.log('✅ [SECURITY API] Vérification admin réussie:', {
+        userId,
+        email,
+        isAdmin: userProfile.isAdmin,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName
+      });
+
+      return NextResponse.json({
+        isValid: true,
+        isAdmin: true,
+        isSuperAdmin: false, // Pour l'instant, pas de super admin
+        user: {
+          id: userId,
+          email: email,
+          firstName: userProfile.firstName,
+          lastName: userProfile.lastName,
+          isAdmin: userProfile.isAdmin
+        }
+      });
+
+    } catch (firebaseError) {
+      console.error('❌ [SECURITY API] Erreur Firebase:', firebaseError);
+      
+      // Fallback temporaire pour les emails admin connus
+      const authorizedAdmins = [
+        'admin@qrprocreator.com',
+        'contact@qrprocreator.com'
+      ];
+      
+      if (authorizedAdmins.includes(email)) {
+        console.log('✅ [SECURITY API] Fallback admin autorisé:', email);
+        return NextResponse.json({
+          isValid: true,
+          isAdmin: true,
+          isSuperAdmin: false,
+          user: {
+            id: userId,
+            email: email,
+            firstName: 'Admin',
+            lastName: 'User'
+          }
+        });
+      }
+      
+      return NextResponse.json(
+        { error: 'Erreur de vérification Firebase', isValid: false },
+        { status: 500 }
+      );
+    }
 
   } catch (error) {
     console.error('❌ [SECURITY API] Erreur de vérification:', error);

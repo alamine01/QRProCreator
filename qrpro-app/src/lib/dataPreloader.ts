@@ -31,7 +31,7 @@ export class DataPreloader {
       return this.preloadPromises.get(cacheKey);
     }
 
-    const promise = this.fetchWithRetry('/api/admin/stats', {}, 5 * 60 * 1000);
+    const promise = this.fetchWithRetry('/api/admin/stats', {}, 1 * 60 * 1000); // Cache réduit à 1 minute
     this.preloadPromises.set(cacheKey, promise);
     
     try {
@@ -94,25 +94,33 @@ export class DataPreloader {
       try {
         const response = await fetch(url, options);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          console.warn(`HTTP error! status: ${response.status} for ${url}`);
+          // Retourner des données vides au lieu de lancer une erreur
+          return [];
         }
         
         const data = await response.json();
         
-        // Mettre en cache
+        // Mettre en cache (sauf pour les stats qui sont toujours rechargées)
         const cacheKey = `fetch_${url}_${JSON.stringify(options || {})}`;
+        if (url.includes('/api/admin/stats')) {
+          // Invalider le cache existant pour les stats
+          cache.delete(cacheKey);
+        }
         cache.set(cacheKey, data, ttl);
         
         return data;
       } catch (error) {
+        console.warn(`Erreur lors du fetch de ${url}:`, error);
         if (i === retries - 1) {
-          console.warn(`Échec du préchargement pour ${url} après ${retries} tentatives:`, error);
-          throw error;
+          console.warn(`Échec du préchargement pour ${url} après ${retries} tentatives, retour de données vides`);
+          return []; // Retourner des données vides au lieu de lancer une erreur
         }
         // Attendre avant de réessayer
         await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
       }
     }
+    return []; // Retour par défaut
   }
 
   // Précharger les données pour une page spécifique

@@ -2,9 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
-import { Timestamp } from 'firebase/firestore';
-import { auth, getUserProfile, createUserProfile, saveUserProfile, db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { auth, getUserProfile, createUserProfile, saveUserProfile } from '@/lib/firebase';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -61,19 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             let profileSlug = baseSlug;
             let counter = 1;
             
-            // Vérifier l'unicité du slug
-            while (true) {
-              const slugQuery = query(
-                collection(db, 'users'),
-                where('profileSlug', '==', profileSlug)
-              );
-              const slugSnapshot = await getDocs(slugQuery);
-              
-              if (slugSnapshot.empty) break;
-              
-              profileSlug = `${baseSlug}-${counter}`;
-              counter++;
-            }
+            // Vérifier l'unicité du slug - Version simplifiée
+            // Pour l'instant, on utilise un timestamp pour éviter les conflits
+            profileSlug = `${baseSlug}-${Date.now()}`;
 
             userData = {
               id: firebaseUser.uid,
@@ -101,8 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               tiktok: '',
               snapchat: '',
               isAdmin: false,
-              createdAt: Timestamp.now(),
-              updatedAt: Timestamp.now(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
             };
 
             // Créer le profil dans Firestore
@@ -114,11 +102,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
           setUser(userData);
-          // ADMIN SPÉCIFIQUE: bahmouhamedalamine@gmail.com
-          const isSpecificAdmin = userData.email === 'bahmouhamedalamine@gmail.com';
-          setIsAdmin(isSpecificAdmin || userData.isAdmin || false);
-          if (isSpecificAdmin) {
-            console.log('🔧 DEBUG: Admin spécifique détecté - bahmouhamedalamine@gmail.com');
+          // Vérification admin sécurisée - ne pas hardcoder l'email
+          setIsAdmin(userData.isAdmin || false);
+          if (userData.isAdmin) {
+            console.log('🔧 DEBUG: Utilisateur admin détecté:', userData.email);
           }
         } catch (error) {
           console.error('Erreur lors de la gestion du profil utilisateur:', error);

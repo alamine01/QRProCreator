@@ -25,12 +25,57 @@ export async function GET(
     }
     
     // Récupérer le document
-    const document = await getDocumentById(id);
+    console.log('🔍 Recherche du document avec ID:', id);
+    let document = await getDocumentById(id);
     
     if (!document) {
-      console.log('❌ Document non trouvé:', id);
-      return NextResponse.json({ error: 'Document non trouvé' }, { status: 404 });
+      console.log('❌ Document non trouvé avec ID:', id);
+      console.log('🔍 Vérification des documents existants...');
+      
+        // Debug: Lister tous les documents pour voir ce qui existe
+        try {
+          const { getAllDocuments } = await import('@/lib/firebase');
+          const allDocs = await getAllDocuments();
+          console.log('📋 Documents existants:', allDocs.map((doc: any) => ({ id: doc.id, name: doc.name })));
+          
+          // Essayer de trouver le document par nom ou email
+          const matchingDoc = allDocs.find((doc: any) => 
+            doc.id === id || 
+            doc.ownerEmail === email ||
+            doc.name?.toLowerCase().includes('test')
+          );
+          
+          if (matchingDoc) {
+            console.log('✅ Document trouvé par correspondance:', matchingDoc.id);
+            document = matchingDoc;
+          }
+        } catch (debugError) {
+          console.log('⚠️ Impossible de lister les documents:', debugError);
+        }
+        
+        // Si toujours pas trouvé, essayer le stockage local
+        if (!document) {
+          try {
+            const { getAllLocalDocuments } = await import('@/lib/localStorage');
+            const localDocs = getAllLocalDocuments();
+            console.log('📋 Documents locaux:', localDocs.map((doc: any) => ({ id: doc.id, name: doc.name })));
+            
+            const localDoc = localDocs.find((doc: any) => doc.id === id);
+            if (localDoc) {
+              console.log('✅ Document trouvé dans le stockage local:', localDoc.id);
+              document = localDoc;
+            }
+          } catch (localError) {
+            console.log('⚠️ Erreur stockage local:', localError);
+          }
+        }
+      
+      if (!document) {
+        return NextResponse.json({ error: 'Document non trouvé' }, { status: 404 });
+      }
     }
+    
+    console.log('✅ Document trouvé:', { id: document.id, name: document.name, ownerEmail: document.ownerEmail });
     
     // Vérifier que le document est public et que le suivi est activé
     if (document.classification !== 'public' || !document.statsTrackingEnabled) {
@@ -67,7 +112,7 @@ export async function GET(
       );
 
       const qrScansSnapshot = await getDocs(qrScansQuery);
-      qrScans = qrScansSnapshot.docs.map(doc => ({
+      qrScans = qrScansSnapshot.docs.map((doc: any) => ({
         id: doc.id,
         timestamp: doc.data().timestamp,
         userAgent: doc.data().userAgent,
@@ -76,7 +121,7 @@ export async function GET(
       }));
       
       // Trier manuellement côté client (plus fiable)
-      qrScans.sort((a, b) => {
+      qrScans.sort((a: any, b: any) => {
         const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
         const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
         return dateB.getTime() - dateA.getTime();

@@ -48,7 +48,7 @@ export function Navigation() {
                 </Link>
                 
                 <span className="text-sm font-medium text-gray-700">
-                  {user.firstName} {user.lastName}
+                  {user?.firstName} {user?.lastName}
                 </span>
                 <button
                   onClick={logout}
@@ -58,13 +58,15 @@ export function Navigation() {
                 </button>
               </div>
             ) : (
-              <Link
-                href="/auth/signin"
-                className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
-              >
-                <User className="h-4 w-4" />
-                <span>Se connecter</span>
-              </Link>
+              <div className="flex items-center space-x-2">
+                <Link
+                  href="/auth/signin"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 shadow-lg border-2 border-white/20"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Se connecter</span>
+                </Link>
+              </div>
             )}
           </div>
         </div>

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AdminGuard } from '@/components/security/AdminGuard';
 import { AdminNavigation } from '@/components/layout/AdminNavigation';
+import { useAdminOrders } from '@/hooks/useAdminData';
 import { 
   FaArrowLeft,
   FaSearch,
@@ -20,7 +21,8 @@ import {
   FaMapMarkerAlt,
   FaEdit,
   FaSave,
-  FaTimes
+  FaTimes,
+  FaSync
 } from 'react-icons/fa';
 import ResponsiveTable from '@/components/ui/ResponsiveTable';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
@@ -43,42 +45,24 @@ export default function OrdersManagement() {
     cancellationReason: ''
   });
 
-  // États locaux pour les commandes
-  const [orders, setOrders] = useState<any[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(true);
-
-  // Fonction pour charger les commandes
-  const fetchOrders = async () => {
-    try {
-      console.log('🚀 [ADMIN UI] Début du chargement des commandes');
-      setOrdersLoading(true);
-      const response = await fetch('/api/admin/orders');
-      console.log('🚀 [ADMIN UI] Réponse API:', response.status, response.ok);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🚀 [ADMIN UI] Commandes chargées:', data.length, 'commandes');
-        setOrders(data);
-      } else {
-        console.error('❌ [ADMIN UI] Erreur lors du chargement des commandes:', response.status);
-      }
-    } catch (error) {
-      console.error('❌ [ADMIN UI] Erreur lors du chargement des commandes:', error);
-    } finally {
-      setOrdersLoading(false);
-    }
-  };
-
+  // Utiliser le hook optimisé pour les commandes
+  const { orders, loading: ordersLoading, refetch: refetchOrders } = useAdminOrders({ limit: 50 });
+  
+  // État local pour les commandes (permet la mise à jour immédiate)
+  const [localOrders, setLocalOrders] = useState<Order[]>([]);
+  
+  // Synchroniser les commandes locales avec les données du hook (seulement au chargement initial)
   useEffect(() => {
-    console.log('🚀 [ADMIN UI] Chargement des commandes');
-    fetchOrders();
-  }, []);
+    if (orders && localOrders.length === 0) {
+      setLocalOrders(orders);
+    }
+  }, [orders, localOrders.length]);
 
   // Utiliser useMemo pour optimiser le filtrage
   const filteredOrders = useMemo(() => {
-    if (!orders) return [];
+    if (!localOrders) return [];
     
-    let filtered = orders;
+    let filtered = localOrders;
 
     // Filter by search term
     if (searchTerm) {
@@ -96,7 +80,7 @@ export default function OrdersManagement() {
     }
 
     return filtered;
-  }, [orders, searchTerm, statusFilter]);
+  }, [localOrders, searchTerm, statusFilter]);
 
   const handleStatusUpdate = async () => {
     if (!selectedOrder || !statusUpdate.status) return;
@@ -109,7 +93,7 @@ export default function OrdersManagement() {
       });
       
       setIsUpdating(true);
-      const response = await fetch('/api/admin/orders', {
+      const response = await fetch('/api/admin/orders-fix', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -146,18 +130,28 @@ export default function OrdersManagement() {
           console.log('✅ Email envoyé avec succès côté serveur');
         }
 
-        // Recharger les commandes pour voir les changements
-        await fetchOrders();
+        // Mise à jour immédiate de l'état local pour voir le changement instantanément
+        setLocalOrders(prevOrders => 
+          prevOrders.map(order => 
+            order.id === selectedOrder.id 
+              ? { ...order, status: statusUpdate.status as any }
+              : order
+          )
+        );
         
+        // Fermer le modal
         setShowModal(false);
         setSelectedOrder(null);
         setStatusUpdate({ status: '', cancellationReason: '' });
         
         // Message de confirmation adapté
         const message = result.emailSent 
-          ? 'Statut de la commande mis à jour avec succès ! Email envoyé au client.'
-          : 'Statut de la commande mis à jour avec succès !';
+          ? `Statut mis à jour avec succès ! Email envoyé au client. (Source: ${result.source || 'firebase'})`
+          : `Statut mis à jour avec succès ! (Source: ${result.source || 'firebase'})`;
         alert(message);
+        
+        // Ne pas recharger automatiquement - laisser l'état local intact
+        // Le rechargement se fera lors de la prochaine visite de la page
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erreur lors de la mise à jour');
@@ -167,6 +161,19 @@ export default function OrdersManagement() {
       alert('Erreur lors de la mise à jour du statut: ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await refetchOrders();
+      // Synchroniser avec les nouvelles données Firebase
+      if (orders) {
+        setLocalOrders(orders);
+      }
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement:', error);
+      alert('Erreur lors du rafraîchissement des données');
     }
   };
 
@@ -294,7 +301,7 @@ export default function OrdersManagement() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -318,6 +325,16 @@ export default function OrdersManagement() {
                 <option value="delivered">Livré</option>
                 <option value="cancelled">Annulé</option>
               </select>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={handleRefresh}
+                className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200"
+                title="Rafraîchir les données"
+              >
+                <FaSync className="text-sm" />
+                <span className="hidden sm:inline">Rafraîchir</span>
+              </button>
             </div>
           </div>
         </div>

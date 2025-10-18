@@ -201,7 +201,8 @@ export default function MyOrdersPage() {
       console.log('Données à mettre à jour:', updateData);
       
       // Mettre à jour la commande dans Firebase
-      await updateDoc(doc(db, 'orders', selectedOrder.id), updateData);
+      const orderRef = doc(db, 'orders', selectedOrder.id);
+      await updateDoc(orderRef, updateData);
       console.log('Commande mise à jour avec succès dans Firebase');
       
       // Recharger les commandes

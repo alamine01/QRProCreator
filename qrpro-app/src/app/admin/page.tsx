@@ -29,8 +29,8 @@ export default function AdminDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
   
-  // Utiliser les hooks optimisés avec cache
-  const { stats, loading: statsLoading } = useAdminStats();
+  // Utiliser les hooks optimisés avec cache désactivé pour les stats
+  const { stats, loading: statsLoading, refetch: refetchStats } = useAdminStats({ enableCache: false, refetchOnMount: true });
   const { orders: recentOrders, loading: ordersLoading } = useAdminOrders({ limit: 5 });
   const { users: recentUsers, loading: usersLoading } = useAdminUsers({ limit: 5 });
   const { documents: recentDocuments, loading: documentsLoading } = useAdminDocuments({ limit: 5 });
@@ -40,7 +40,14 @@ export default function AdminDashboard() {
       router.push('/auth/signin');
       return;
     }
-  }, [user, loading, router]);
+    
+    // Recharger les statistiques toutes les 30 secondes pour éviter les conflits de cache
+    const interval = setInterval(() => {
+      refetchStats();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [user, loading, router, refetchStats]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -251,10 +258,10 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {order.customerInfo.firstName} {order.customerInfo.lastName}
+                            {order.customerInfo?.firstName || 'N/A'} {order.customerInfo?.lastName || 'N/A'}
                           </p>
                           <p className="text-sm text-gray-500">
-                            Commande #{order.orderNumber}
+                            Commande #{order.orderNumber || order.id}
                           </p>
                         </div>
                       </div>

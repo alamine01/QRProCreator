@@ -75,7 +75,7 @@ export default function UsersManagement() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/users');
+      const response = await fetch('/api/admin/users-fix');
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
@@ -94,7 +94,7 @@ export default function UsersManagement() {
 
     try {
       setIsUpdating(true);
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch('/api/admin/users-fix', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

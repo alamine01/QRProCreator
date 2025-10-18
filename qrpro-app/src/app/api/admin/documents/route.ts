@@ -72,6 +72,20 @@ export async function POST(request: NextRequest) {
       
       const docId = await createDocument(documentData);
       console.log('✅ Document Firebase créé avec ID:', docId);
+      console.log('🔍 Vérification du document créé...');
+      
+      // Vérifier que le document a bien été créé
+      try {
+        const { getDocumentById } = await import('@/lib/firebase');
+        const createdDoc = await getDocumentById(docId);
+        if (createdDoc) {
+          console.log('✅ Document vérifié dans Firebase:', { id: createdDoc.id, name: createdDoc.name });
+        } else {
+          console.log('❌ Document non trouvé après création!');
+        }
+      } catch (verifyError) {
+        console.log('⚠️ Erreur lors de la vérification:', verifyError);
+      }
 
       // Générer l'URL publique avec l'ID Firebase réel
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002'; // Utiliser le port 3002

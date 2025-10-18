@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllUsers, getAllOrders, getAllBusinessCards } from '@/lib/firebase';
 
-// GET /api/admin/stats - Get admin statistics (Firebase data)
+// GET /api/admin/stats-real - Statistiques réelles sans cache
 export async function GET(request: NextRequest) {
   try {
-    console.log('🚀 [API ADMIN STATS] Récupération des statistiques Firebase');
+    console.log('🚀 [API ADMIN STATS-REAL] Récupération des statistiques Firebase (sans cache)');
     
     // Récupérer les vraies données Firebase
     const [users, orders, businessCards] = await Promise.all([
@@ -13,16 +13,10 @@ export async function GET(request: NextRequest) {
       getAllBusinessCards()
     ]);
     
-    console.log('📊 [API ADMIN STATS] Données récupérées:', {
+    console.log('📊 [API ADMIN STATS-REAL] Données récupérées:', {
       users: users.length,
       orders: orders.length,
       businessCards: businessCards.length
-    });
-    
-    // Log des commandes pour diagnostic
-    console.log('📋 [API ADMIN STATS] Détail des commandes:');
-    orders.forEach(order => {
-      console.log(`  - ${order.id}: statut=${order.status}, montant=${order.totalAmount || 0}`);
     });
     
     // Calculer les statistiques réelles
@@ -39,25 +33,22 @@ export async function GET(request: NextRequest) {
     // Calculer le revenu total (seulement les commandes livrées)
     const totalRevenue = orders.reduce((sum, order) => {
       if (order.status === 'delivered') {
-        // Gérer différents formats de montant
         let amount = 0;
         if (typeof order.totalAmount === 'number') {
           amount = order.totalAmount;
         } else if (typeof order.totalAmount === 'string') {
           amount = parseFloat(order.totalAmount) || 0;
         }
-        console.log(`💰 Commande livrée ${order.id}: ${amount} (statut: ${order.status})`);
+        console.log(`💰 Commande livrée ${order.id}: ${amount} FCFA`);
         return sum + amount;
       }
       return sum;
     }, 0);
     
-    console.log(`💰 Revenu calculé pour commandes livrées: ${totalRevenue} FCFA`);
-    
     // Calculer la valeur moyenne des commandes livrées
     const averageOrderValue = deliveredOrders > 0 ? Math.round(totalRevenue / deliveredOrders) : 0;
     
-    // Calculer les taux de croissance (simulation basée sur les données actuelles)
+    // Calculer les taux de croissance
     const userGrowth = totalUsers > 0 ? Math.round((totalUsers / 10) * 100) : 0;
     const orderGrowth = totalOrders > 0 ? Math.round((totalOrders / 5) * 100) : 0;
     const revenueGrowth = totalRevenue > 0 ? Math.round((totalRevenue / 100000) * 100) : 0;
@@ -70,24 +61,21 @@ export async function GET(request: NextRequest) {
       processingOrders,
       deliveredOrders,
       cancelledOrders,
-      totalRevenue, // Calculé automatiquement pour les commandes livrées
+      totalRevenue, // Seulement les commandes livrées
       averageOrderValue, // Basé sur les commandes livrées
       userGrowth,
       orderGrowth,
       revenueGrowth,
-      // Statistiques supplémentaires
-      revenueFromDelivered: totalRevenue,
-      revenueFromAll: orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0),
-      deliveryRate: totalOrders > 0 ? Math.round((deliveredOrders / totalOrders) * 100) : 0,
-      source: 'firebase'
+      source: 'firebase-real',
+      timestamp: new Date().toISOString()
     };
     
-    console.log('✅ [API ADMIN STATS] Statistiques calculées:', realStats);
+    console.log('✅ [API ADMIN STATS-REAL] Statistiques calculées:', realStats);
     
     return NextResponse.json(realStats);
     
   } catch (error) {
-    console.error('❌ [API ADMIN STATS] Erreur:', error);
+    console.error('❌ [API ADMIN STATS-REAL] Erreur:', error);
     
     // Fallback vers des statistiques simulées en cas d'erreur
     const fallbackStats = {

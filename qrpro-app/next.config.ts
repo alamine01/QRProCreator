@@ -18,6 +18,29 @@ const nextConfig: NextConfig = {
   
   // Optimisation du bundle
   webpack: (config, { dev, isServer }) => {
+    // Configuration pour Firebase et Next.js 15
+    config.resolve = {
+      ...config.resolve,
+      fallback: {
+        ...config.resolve?.fallback,
+        "fs": false,
+        "net": false,
+        "tls": false,
+        "crypto": false,
+      },
+    };
+
+    // Configuration spécifique pour Firebase
+    config.externals = config.externals || [];
+    if (isServer) {
+      config.externals.push({
+        'firebase/app': 'commonjs firebase/app',
+        'firebase/auth': 'commonjs firebase/auth',
+        'firebase/firestore': 'commonjs firebase/firestore',
+        'firebase/storage': 'commonjs firebase/storage',
+      });
+    }
+
     if (!dev && !isServer) {
       // Optimiser le bundle pour la production
       config.optimization.splitChunks = {

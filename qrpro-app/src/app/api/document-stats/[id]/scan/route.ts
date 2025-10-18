@@ -36,9 +36,15 @@ export async function POST(
     }
 
     // Incrémenter le compteur de scans QR
-    await updateDoc(doc(db, 'documents', id), {
-      qrScanCount: increment(1)
-    });
+    try {
+      await updateDoc(doc(db, 'documents', id), {
+        qrScanCount: increment(1)
+      });
+      console.log('✅ Compteur de scans QR incrémenté');
+    } catch (updateError) {
+      console.log('⚠️ Erreur lors de l\'incrémentation du compteur:', updateError);
+      // Continuer même si l'incrémentation échoue
+    }
 
     // Enregistrer le scan dans la collection qrScans
     const scanData = {
@@ -98,9 +104,15 @@ export async function GET(
     }
 
     // Incrémenter le compteur de scans QR
-    await updateDoc(doc(db, 'documents', id), {
-      qrScanCount: increment(1)
-    });
+    try {
+      await updateDoc(doc(db, 'documents', id), {
+        qrScanCount: increment(1)
+      });
+      console.log('✅ Compteur de scans QR incrémenté (GET)');
+    } catch (updateError) {
+      console.log('⚠️ Erreur lors de l\'incrémentation du compteur (GET):', updateError);
+      // Continuer même si l'incrémentation échoue
+    }
 
     // Enregistrer le scan dans la collection qrScans
     const scanData = {

@@ -45,3 +45,4 @@ export const validateEmail = (email: string): { isValid: boolean; error?: string
 export const cleanEmail = (email: string): string => {
   return email.trim().toLowerCase();
 };
+

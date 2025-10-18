@@ -24,13 +24,14 @@ export default function StatisticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week');
   const [activeTab, setActiveTab] = useState<'overview' | 'scans' | 'downloads'>('overview');
 
-  // Charger les vraies données depuis Firebase
+  // Charger les vraies données depuis Firebase - SÉCURISÉ
   useEffect(() => {
     const loadStats = async () => {
       if (user) {
         try {
           setIsLoading(true);
-          const stats = await getUserStats(user.id, selectedPeriod);
+          // Passer l'ID de l'utilisateur connecté pour la vérification de sécurité
+          const stats = await getUserStats(user.id, user.id, selectedPeriod);
           setStatsData(stats);
         } catch (error) {
           console.error('Erreur lors du chargement des statistiques:', error);

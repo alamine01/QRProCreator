@@ -9,7 +9,7 @@ interface UseAdminDataOptions {
 
 // Hook pour charger les statistiques admin avec cache
 export function useAdminStats(options: UseAdminDataOptions = {}) {
-  const { enableCache = true, cacheTTL = 5 * 60 * 1000, refetchOnMount = false } = options;
+  const { enableCache = false, cacheTTL = 1 * 60 * 1000, refetchOnMount = true } = options; // Désactiver le cache par défaut
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,17 +19,14 @@ export function useAdminStats(options: UseAdminDataOptions = {}) {
       setLoading(true);
       setError(null);
 
-      let data;
-      if (enableCache && !refetchOnMount) {
-        data = await fetchWithCache('/api/admin/stats', {}, cacheTTL);
-      } else {
-        const response = await fetch('/api/admin/stats');
-        if (!response.ok) throw new Error('Failed to fetch stats');
-        data = await response.json();
-        if (enableCache) {
-          cache.set(CACHE_KEYS.STATS, data, cacheTTL);
-        }
-      }
+      // Utiliser l'endpoint normal avec valeur forcée
+      const response = await fetch('/api/admin/stats');
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      const data = await response.json();
+      
+      // Invalider le cache et mettre à jour
+      cache.delete(CACHE_KEYS.STATS);
+      cache.set(CACHE_KEYS.STATS, data, cacheTTL);
 
       setStats(data);
     } catch (err) {
@@ -37,7 +34,7 @@ export function useAdminStats(options: UseAdminDataOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [enableCache, cacheTTL, refetchOnMount]);
+  }, [cacheTTL]);
 
   useEffect(() => {
     fetchStats();
@@ -58,7 +55,7 @@ export function useAdminOrders(options: UseAdminDataOptions & { limit?: number }
       setLoading(true);
       setError(null);
 
-      const url = `/api/admin/orders${limit ? `?limit=${limit}` : ''}`;
+      const url = `/api/admin/orders-fix${limit ? `?limit=${limit}` : ''}`;
       let data;
       
       if (enableCache) {
@@ -77,11 +74,42 @@ export function useAdminOrders(options: UseAdminDataOptions & { limit?: number }
     }
   }, [enableCache, cacheTTL, limit]);
 
+  // Fonction pour forcer le rechargement (invalide le cache)
+  const refetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const url = `/api/admin/orders-fix${limit ? `?limit=${limit}` : ''}`;
+      
+      // Invalider le cache et forcer le rechargement
+      cache.invalidatePattern('/api/admin/orders-fix');
+      cache.delete(CACHE_KEYS.ORDERS);
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch orders');
+      const data = await response.json();
+      
+      // Mettre à jour le cache avec la bonne clé
+      if (enableCache) {
+        cache.set(CACHE_KEYS.ORDERS, data, cacheTTL);
+        // Aussi mettre en cache avec l'URL complète pour cohérence
+        cache.set(`fetch_${url}_{}`, data, cacheTTL);
+      }
+
+      setOrders(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, [enableCache, cacheTTL, limit]);
+
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-  return { orders, loading, error, refetch: fetchOrders };
+  return { orders, loading, error, refetch: refetchOrders };
 }
 
 // Hook pour charger les utilisateurs avec cache
@@ -96,7 +124,7 @@ export function useAdminUsers(options: UseAdminDataOptions & { limit?: number } 
       setLoading(true);
       setError(null);
 
-      const url = `/api/admin/users${limit ? `?limit=${limit}` : ''}`;
+      const url = `/api/admin/users-fix${limit ? `?limit=${limit}` : ''}`;
       let data;
       
       if (enableCache) {
