@@ -35,6 +35,7 @@ export interface User {
   tempPassword?: string; // Mot de passe temporaire en clair pour affichage admin
   mustChangePassword?: boolean; // Force le changement de mot de passe à la première connexion
   accountType?: 'google' | 'manual'; // Type de compte (Google ou manuel)
+  phoneCollected?: boolean; // Indique si le numéro de téléphone a été collecté
 }
 
 export interface BusinessCard {
@@ -192,6 +193,7 @@ export interface RegisterFormData {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   password: string;
   confirmPassword: string;
 }

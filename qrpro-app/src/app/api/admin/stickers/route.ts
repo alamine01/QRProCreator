@@ -102,10 +102,16 @@ export async function GET(request: NextRequest) {
     }
     
     const snapshot = await getDocs(q);
-    const stickers = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Sticker[];
+    const stickers = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Convertir les timestamps Firebase en dates JavaScript
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+        assignedAt: data.assignedAt?.toDate ? data.assignedAt.toDate() : data.assignedAt
+      };
+    }) as Sticker[];
 
     return NextResponse.json({ stickers });
   } catch (error) {

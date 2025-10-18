@@ -63,6 +63,8 @@ export default function SignInPage() {
         errorMessage = 'Trop de tentatives. Veuillez réessayer plus tard';
       } else if (error.code === 'auth/user-disabled') {
         errorMessage = 'Ce compte a été désactivé';
+      } else if (error.code === 'auth/invalid-credential') {
+        errorMessage = 'Email ou mot de passe incorrect';
       }
       
       setError(errorMessage);

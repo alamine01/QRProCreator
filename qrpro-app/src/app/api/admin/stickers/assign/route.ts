@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { 
   doc, 
   getDoc, 
@@ -11,6 +11,7 @@ import {
   addDoc,
   serverTimestamp 
 } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Sticker, User } from '@/types';
 import { createTempUserForSticker, getUserByEmail } from '@/lib/userAuth';
 
@@ -23,6 +24,14 @@ export async function POST(request: NextRequest) {
     if (!stickerId || !customerName || !customerEmail) {
       return NextResponse.json(
         { error: 'Tous les champs sont requis' },
+        { status: 400 }
+      );
+    }
+
+    // Valider l'email
+    if (!customerEmail.trim() || !customerEmail.includes('@')) {
+      return NextResponse.json(
+        { error: 'Email invalide' },
         { status: 400 }
       );
     }
@@ -59,18 +68,31 @@ export async function POST(request: NextRequest) {
       const [firstName, ...lastNameParts] = customerName.trim().split(' ');
       const lastName = lastNameParts.join(' ') || '';
       
-      const result = await createTempUserForSticker(firstName, lastName, customerEmail);
+      let tempPassword = `${firstName.toLowerCase()}123`;
       
-      if (!result.success) {
+      try {
+        // Créer l'utilisateur dans Firebase Auth d'abord
+        const firebaseUser = await createUserWithEmailAndPassword(auth, customerEmail, tempPassword);
+        
+        // Créer le profil dans Firestore
+        const result = await createTempUserForSticker(firstName, lastName, customerEmail, firebaseUser.user.uid);
+        
+        if (!result.success) {
+          return NextResponse.json(
+            { error: result.error },
+            { status: 400 }
+          );
+        }
+        
+        userId = result.user!.id;
+        isNewUser = true;
+      } catch (firebaseError: any) {
+        console.error('Erreur création Firebase Auth:', firebaseError);
         return NextResponse.json(
-          { error: result.error },
+          { error: `Erreur lors de la création du compte: ${firebaseError.message}` },
           { status: 400 }
         );
       }
-      
-      userId = result.user!.id;
-      tempPassword = result.tempPassword;
-      isNewUser = true;
     } else {
       // Utiliser le compte existant
       userId = existingUser.id;
@@ -84,25 +106,8 @@ export async function POST(request: NextRequest) {
       assignedAt: serverTimestamp()
     });
 
-    // Si c'est un nouvel utilisateur, créer une carte de visite basée sur le profil aléatoire
-    if (isNewUser) {
-      const businessCard = {
-        name: sticker.randomProfile.firstName + ' ' + sticker.randomProfile.lastName,
-        title: sticker.randomProfile.profession,
-        company: sticker.randomProfile.company,
-        bio: sticker.randomProfile.bio,
-        phonePrimary: sticker.randomProfile.phone,
-        email: customerEmail.toLowerCase(),
-        location: 'Dakar, Sénégal',
-        isActive: true,
-        uniqueId: sticker.qrCode,
-        userId: userId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
-
-      await addDoc(collection(db, 'businessCards'), businessCard);
-    }
+    // Note: La création de carte de visite a été supprimée
+    // L'utilisateur devra créer sa propre carte de visite via le dashboard
 
     return NextResponse.json({
       message: isNewUser 
@@ -113,8 +118,8 @@ export async function POST(request: NextRequest) {
       tempPassword: isNewUser ? tempPassword : undefined,
       accountType: 'manual',
       note: isNewUser 
-        ? `Mot de passe temporaire: ${tempPassword} (le client devra le changer à la première connexion)`
-        : 'Le client peut utiliser ses identifiants existants'
+        ? `Mot de passe temporaire: ${tempPassword} (le client devra le changer à la première connexion et créer sa carte de visite)`
+        : 'Le client peut utiliser ses identifiants existants et devra créer sa carte de visite'
     });
 
   } catch (error) {

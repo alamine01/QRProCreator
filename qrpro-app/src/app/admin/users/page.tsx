@@ -22,7 +22,8 @@ import {
   FaCrown,
   FaUserPlus,
   FaUserMinus,
-  FaMapMarkerAlt
+  FaMapMarkerAlt,
+  FaExternalLinkAlt
 } from 'react-icons/fa';
 import { User } from '@/types';
 
@@ -301,6 +302,17 @@ export default function UsersManagement() {
                     >
                       <FaEye className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
+                    {user.profileSlug && (
+                      <button
+                        onClick={() => {
+                          window.open(`/pro/${user.profileSlug}`, '_blank');
+                        }}
+                        className="text-green-600 hover:text-green-800 p-1 sm:p-2"
+                        title="Voir le profil public"
+                      >
+                        <FaExternalLinkAlt className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -451,6 +463,17 @@ export default function UsersManagement() {
                 >
                   Fermer
                 </button>
+                {selectedUser.profileSlug && (
+                  <button
+                    onClick={() => {
+                      window.open(`/pro/${selectedUser.profileSlug}`, '_blank');
+                    }}
+                    className="flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                  >
+                    <FaExternalLinkAlt className="mr-2" />
+                    Voir le profil public
+                  </button>
+                )}
                 <button
                   onClick={() => handleToggleAdmin(selectedUser.id, selectedUser.isAdmin)}
                   disabled={isUpdating}

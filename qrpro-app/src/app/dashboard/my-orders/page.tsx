@@ -115,6 +115,9 @@ export default function MyOrdersPage() {
     
     try {
       setLoadingOrders(true);
+      if (!user.id) {
+        throw new Error('ID utilisateur manquant');
+      }
       const userOrders = await getUserOrders(user.id);
       setOrders(userOrders);
     } catch (error) {

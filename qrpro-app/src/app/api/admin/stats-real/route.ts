@@ -30,20 +30,28 @@ export async function GET(request: NextRequest) {
     const deliveredOrders = orders.filter(order => order.status === 'delivered').length;
     const cancelledOrders = orders.filter(order => order.status === 'cancelled').length;
     
-    // Calculer le revenu total (seulement les commandes livrées)
-    const totalRevenue = orders.reduce((sum, order) => {
+    // NOUVEAU CALCUL DES REVENUS - ULTRA-SIMPLE ET SÉCURISÉ
+    let totalRevenue = 0;
+    let deliveredCount = 0;
+    
+    for (const order of orders) {
       if (order.status === 'delivered') {
+        deliveredCount++;
         let amount = 0;
+        
+        // Conversion sécurisée du montant
         if (typeof order.totalAmount === 'number') {
           amount = order.totalAmount;
         } else if (typeof order.totalAmount === 'string') {
           amount = parseFloat(order.totalAmount) || 0;
         }
-        console.log(`💰 Commande livrée ${order.id}: ${amount} FCFA`);
-        return sum + amount;
+        
+        totalRevenue += amount;
+        console.log(`💰 [REVENUS] Commande livrée ${order.id}: ${amount} FCFA (Total: ${totalRevenue})`);
       }
-      return sum;
-    }, 0);
+    }
+    
+    console.log(`💰 [REVENUS] Total: ${totalRevenue} FCFA pour ${deliveredCount} commandes livrées`);
     
     // Calculer la valeur moyenne des commandes livrées
     const averageOrderValue = deliveredOrders > 0 ? Math.round(totalRevenue / deliveredOrders) : 0;

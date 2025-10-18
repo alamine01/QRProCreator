@@ -169,11 +169,11 @@ export default function AdminStickersPage() {
       let aValue, bValue;
       
       if (sortBy === 'createdAt') {
-        aValue = a.createdAt?.toDate?.() || new Date(0);
-        bValue = b.createdAt?.toDate?.() || new Date(0);
+        aValue = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt || 0);
+        bValue = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt || 0);
       } else {
-        aValue = a.assignedAt?.toDate?.() || new Date(0);
-        bValue = b.assignedAt?.toDate?.() || new Date(0);
+        aValue = a.assignedAt instanceof Date ? a.assignedAt : new Date(a.assignedAt || 0);
+        bValue = b.assignedAt instanceof Date ? b.assignedAt : new Date(b.assignedAt || 0);
       }
       
       if (sortOrder === 'asc') {
@@ -403,14 +403,14 @@ export default function AdminStickersPage() {
                         <div>
                           <div className="flex items-center">
                             <FaCalendar className="w-3 h-3 mr-1" />
-                            Assigné le {sticker.assignedAt.toDate?.()?.toLocaleDateString() || 'N/A'}
+                            Assigné le {sticker.assignedAt instanceof Date ? sticker.assignedAt.toLocaleDateString('fr-FR') : new Date(sticker.assignedAt).toLocaleDateString('fr-FR')}
                           </div>
                         </div>
                       ) : (
                         <div>
                           <div className="flex items-center">
                             <FaCalendar className="w-3 h-3 mr-1" />
-                            Créé le {sticker.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}
+                            Créé le {sticker.createdAt instanceof Date ? sticker.createdAt.toLocaleDateString('fr-FR') : new Date(sticker.createdAt || 0).toLocaleDateString('fr-FR')}
                           </div>
                         </div>
                       )}

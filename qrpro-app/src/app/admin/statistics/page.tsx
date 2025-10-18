@@ -70,6 +70,14 @@ export default function AdminStatistics() {
 
     if (user?.isAdmin) {
       fetchStatistics();
+      
+      // Rafraîchir les statistiques toutes les 30 secondes
+      const interval = setInterval(() => {
+        console.log('🔄 [STATS] Rafraîchissement automatique des statistiques');
+        fetchStatistics();
+      }, 30000);
+      
+      return () => clearInterval(interval);
     }
   }, [user, loading, router, dateRange]);
 
@@ -84,22 +92,14 @@ export default function AdminStatistics() {
         setStats(prev => ({ ...prev, ...statsData }));
       }
 
-      // Fetch recent orders
-      const ordersResponse = await fetch('/api/admin/orders?limit=10');
+      // Fetch recent orders (utiliser orders-fix pour les données Firebase)
+      const ordersResponse = await fetch('/api/admin/orders-fix?limit=10');
       if (ordersResponse.ok) {
         const ordersData = await ordersResponse.json();
         setRecentOrders(ordersData);
         
-        // Calculate revenue and average order value (only for delivered orders)
-        const deliveredOrders = ordersData.filter((order: Order) => order.status === 'delivered');
-        const totalRevenue = deliveredOrders.reduce((sum: number, order: Order) => sum + order.totalAmount, 0);
-        const averageOrderValue = deliveredOrders.length > 0 ? totalRevenue / deliveredOrders.length : 0;
-        
-        setStats(prev => ({
-          ...prev,
-          totalRevenue,
-          averageOrderValue
-        }));
+        // Ne pas recalculer le revenu ici - il vient déjà de stats-real
+        console.log('📊 [STATS] Commandes récentes chargées:', ordersData.length);
       }
 
       // Fetch recent users
@@ -132,12 +132,45 @@ export default function AdminStatistics() {
 
   const formatDate = (timestamp: any) => {
     if (!timestamp) return 'N/A';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    
+    try {
+      let date: Date;
+      
+      // Gérer différents formats de timestamp
+      if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+        // Firebase Timestamp
+        date = timestamp.toDate();
+      } else if (timestamp.seconds) {
+        // Firebase Timestamp avec seconds
+        date = new Date(timestamp.seconds * 1000);
+      } else if (typeof timestamp === 'string') {
+        // String ISO
+        date = new Date(timestamp);
+      } else if (typeof timestamp === 'number') {
+        // Timestamp numérique
+        date = new Date(timestamp);
+      } else {
+        // Objet Date ou autre
+        date = new Date(timestamp);
+      }
+      
+      // Vérifier si la date est valide
+      if (isNaN(date.getTime())) {
+        console.warn('Date invalide:', timestamp);
+        return 'Date invalide';
+      }
+      
+      return date.toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Erreur formatage date:', error, timestamp);
+      return 'Erreur date';
+    }
   };
 
   const getGrowthIcon = (growth: number) => {

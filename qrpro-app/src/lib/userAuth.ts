@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   addDoc,
+  setDoc,
   updateDoc,
   query,
   where,
@@ -62,7 +63,8 @@ export async function createUserWithPassword(userData: RegisterFormData): Promis
 export async function createTempUserForSticker(
   firstName: string,
   lastName: string,
-  email: string
+  email: string,
+  firebaseUid?: string
 ): Promise<{
   success: boolean;
   user?: User;
@@ -70,6 +72,11 @@ export async function createTempUserForSticker(
   error?: string;
 }> {
   try {
+    // Vérifier que l'email est valide
+    if (!email || email.trim() === '') {
+      return { success: false, error: 'Email requis' };
+    }
+
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
       return { success: false, error: 'Un compte avec cet email existe déjà.' };
@@ -80,7 +87,7 @@ export async function createTempUserForSticker(
     const profileSlug = await generateProfileSlug(firstName, lastName);
 
     const newUser: Omit<User, 'id'> = {
-      googleId: '',
+      googleId: firebaseUid || '',
       email: email.toLowerCase(),
       firstName,
       lastName,
@@ -94,8 +101,16 @@ export async function createTempUserForSticker(
       accountType: 'manual',
     };
 
-    const userRef = await addDoc(collection(db, 'users'), newUser);
-    const createdUser = { id: userRef.id, ...newUser } as User;
+    // Utiliser l'UID Firebase si fourni, sinon créer un nouveau document
+    let userId: string;
+    if (firebaseUid) {
+      // Créer le document avec l'UID Firebase comme ID
+      await setDoc(doc(db, 'users', firebaseUid), newUser);
+      userId = firebaseUid;
+    } else {
+      userId = (await addDoc(collection(db, 'users'), newUser)).id;
+    }
+    const createdUser = { id: userId, ...newUser } as User;
 
     return { success: true, user: createdUser, tempPassword };
   } catch (error) {
@@ -108,9 +123,14 @@ export async function createTempUserForSticker(
  * Récupère un utilisateur par email
  */
 export async function getUserByEmail(email: string): Promise<User | null> {
+  // Vérifier que l'email est valide
+  if (!email || email.trim() === '') {
+    return null;
+  }
+
   const usersQuery = query(
     collection(db, 'users'),
-    where('email', '==', email.toLowerCase())
+    where('email', '==', email.toLowerCase().trim())
   );
   const usersSnapshot = await getDocs(usersQuery);
 
@@ -129,6 +149,11 @@ export async function verifyUserCredentials(
   password: string
 ): Promise<{ success: boolean; user?: User; error?: string }> {
   try {
+    // Vérifier que l'email est valide
+    if (!email || email.trim() === '') {
+      return { success: false, error: 'Email requis' };
+    }
+
     const user = await getUserByEmail(email);
 
     if (!user) {
@@ -181,7 +206,7 @@ export async function updateUserPassword(
       return { success: false, error: 'Utilisateur non trouvé' };
     }
 
-    const user = userSnap.data() as User;
+    const user = { id: userSnap.id, ...userSnap.data() } as User;
 
     // Vérifier le mot de passe actuel
     if (!user.passwordHash) {

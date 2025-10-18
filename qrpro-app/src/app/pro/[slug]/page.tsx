@@ -52,13 +52,17 @@ export default function PublicProfile() {
               
               // Enregistrer le scan
               try {
-                const deviceInfo = await detectDeviceInfo();
-                // Utiliser l'ID de l'utilisateur du profil
-                await recordScan(userProfile.id, {
-                  ...deviceInfo,
-                  ip: 'Unknown', // À améliorer avec une API IP
-                });
-                console.log('Scan enregistré avec succès');
+                if (userProfile.id) {
+                  const deviceInfo = await detectDeviceInfo();
+                  // Utiliser l'ID de l'utilisateur du profil
+                  await recordScan(userProfile.id, {
+                    ...deviceInfo,
+                    ip: 'Unknown', // À améliorer avec une API IP
+                  });
+                  console.log('Scan enregistré avec succès');
+                } else {
+                  console.warn('Impossible d\'enregistrer le scan: ID utilisateur manquant');
+                }
               } catch (scanError) {
                 console.error('Erreur lors de l\'enregistrement du scan:', scanError);
               }

@@ -113,6 +113,9 @@ export async function generateVCard(user: User): Promise<string> {
 export async function downloadVCard(user: User, userId?: string) {
   try {
     console.log('Génération de la vCard pour:', user.firstName, user.lastName);
+    console.log('userId fourni:', userId);
+    console.log('user.id:', user.id);
+    
     const vCardContent = await generateVCard(user);
     
     const blob = new Blob([vCardContent], { type: 'text/vcard;charset=utf-8' });
@@ -128,10 +131,13 @@ export async function downloadVCard(user: User, userId?: string) {
     console.log('vCard téléchargée avec succès');
     
     // Enregistrer le téléchargement si userId est fourni
-    if (userId) {
+    const trackingUserId = userId || user.id;
+    console.log('trackingUserId utilisé:', trackingUserId);
+    
+    if (trackingUserId) {
       try {
         const deviceInfo = await detectDeviceInfo();
-        await recordVCardDownload(userId, {
+        await recordVCardDownload(trackingUserId, {
           ...deviceInfo,
           ip: 'Unknown', // À améliorer avec une API IP
         });
@@ -140,6 +146,8 @@ export async function downloadVCard(user: User, userId?: string) {
         console.warn('Erreur lors de l\'enregistrement du téléchargement vCard:', trackingError);
         // Ne pas empêcher le téléchargement si le tracking échoue
       }
+    } else {
+      console.warn('Aucun userId disponible pour le tracking du téléchargement vCard');
     }
     
     console.log('vCard download completed successfully');

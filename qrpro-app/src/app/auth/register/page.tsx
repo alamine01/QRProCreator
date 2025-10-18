@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { createUserWithEmailPassword } from '@/lib/firebase';
-import { ArrowRight, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { validatePhone, normalizePhone, getPhoneValidationError, formatPhone } from '@/lib/phoneValidation';
+import { ArrowRight, Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
 
 export default function RegisterPage() {
   const { user, loading } = useAuth();
@@ -14,6 +15,7 @@ export default function RegisterPage() {
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: ''
   });
@@ -36,8 +38,15 @@ export default function RegisterPage() {
 
     try {
       // Validation des champs
-      if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
         setError('Tous les champs sont requis');
+        return;
+      }
+
+      // Validation du numéro de téléphone
+      const phoneError = getPhoneValidationError(formData.phone);
+      if (phoneError) {
+        setError(phoneError);
         return;
       }
 
@@ -52,7 +61,11 @@ export default function RegisterPage() {
       }
 
       // Créer le compte avec Firebase Auth
-      await createUserWithEmailPassword(formData.email, formData.password);
+      await createUserWithEmailPassword(formData.email, formData.password, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: normalizePhone(formData.phone)
+      });
       
       // La redirection se fera automatiquement via le contexte d'authentification
       // Le contexte créera automatiquement le profil utilisateur dans Firestore
@@ -78,10 +91,25 @@ export default function RegisterPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Formatage automatique du numéro de téléphone
+    if (name === 'phone') {
+      // Nettoyer le numéro et le formater
+      const cleanValue = value.replace(/[^\d+]/g, '');
+      if (cleanValue.length <= 16) { // Limite pour les numéros internationaux
+        const formattedValue = formatPhone(cleanValue);
+        setFormData(prev => ({
+          ...prev,
+          [name]: formattedValue
+        }));
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+    
     setError(null); // Clear error when user types
   };
 
@@ -185,6 +213,31 @@ export default function RegisterPage() {
                   placeholder="votre@email.com"
                 />
               </div>
+            </div>
+
+            {/* Téléphone */}
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                Numéro de téléphone
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  required
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Votre numéro de téléphone"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Numéro de téléphone requis
+              </p>
             </div>
 
             {/* Mot de passe */}

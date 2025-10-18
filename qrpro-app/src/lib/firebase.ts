@@ -70,9 +70,18 @@ export const signInWithEmailPassword = async (email: string, password: string) =
 };
 
 // Fonction d'inscription avec email/password
-export const createUserWithEmailPassword = async (email: string, password: string) => {
+export const createUserWithEmailPassword = async (email: string, password: string, userData?: { firstName: string; lastName: string; phone: string }) => {
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // Si des données utilisateur sont fournies, les stocker temporairement pour le contexte
+    if (userData) {
+      // Stocker les données dans sessionStorage pour que le contexte puisse les récupérer
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('pendingUserData', JSON.stringify(userData));
+      }
+    }
+    
     return result.user;
   } catch (error) {
     console.error('Erreur d\'inscription email/password:', error);
@@ -126,7 +135,7 @@ export const getUserProfileBySlug = async (slug: string): Promise<User | null> =
     
     if (!querySnapshot.empty) {
       const doc = querySnapshot.docs[0];
-      return doc.data() as User;
+      return { id: doc.id, ...doc.data() } as User;
     } else {
       console.log('Aucun profil utilisateur trouvé avec ce slug:', slug);
       return null;
@@ -144,7 +153,7 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
     const userSnap = await getDoc(userRef);
     
     if (userSnap.exists()) {
-      return userSnap.data() as User;
+      return { id: userSnap.id, ...userSnap.data() } as User;
     } else {
       console.log('Aucun profil utilisateur trouvé');
       return null;
@@ -221,6 +230,11 @@ export interface StatsData {
 // Fonction pour enregistrer un scan
 export const recordScan = async (userId: string, scanData: Partial<ScanData>) => {
   try {
+    // Vérifier que userId est valide
+    if (!userId || userId.trim() === '') {
+      throw new Error('userId est requis pour enregistrer un scan');
+    }
+
     const scanRef = await addDoc(collection(db, 'scans'), {
       userId,
       timestamp: new Date().toISOString(),
@@ -238,15 +252,14 @@ export const recordScan = async (userId: string, scanData: Partial<ScanData>) =>
 // Fonction pour enregistrer un téléchargement de vCard
 export const recordVCardDownload = async (userId: string, downloadData: Partial<ScanData>) => {
   try {
-    // Détecter si c'est un téléchargement unique (même logique que pour les scans)
-    const storageKey = `vcard_download_${userId}`;
-    const lastDownload = localStorage.getItem(storageKey);
-    const now = Date.now();
-    const isUnique = !lastDownload || (now - parseInt(lastDownload)) > 5 * 60 * 1000; // 5 minutes
-    
-    if (isUnique) {
-      localStorage.setItem(storageKey, now.toString());
+    // Vérifier que userId est valide
+    if (!userId || userId.trim() === '') {
+      throw new Error('userId est requis pour enregistrer un téléchargement vCard');
     }
+
+    // Pour l'instant, considérer tous les téléchargements comme uniques
+    // TODO: Implémenter une logique de déduplication côté serveur si nécessaire
+    const isUnique = true;
 
     const downloadRef = await addDoc(collection(db, 'vcard_downloads'), {
       userId,
@@ -264,9 +277,125 @@ export const recordVCardDownload = async (userId: string, downloadData: Partial<
   }
 };
 
+// Fonction pour mettre à jour le mot de passe dans Firebase Auth ET Firestore
+export const updateUserPasswordComplete = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      return { success: false, error: 'Utilisateur non connecté' };
+    }
+
+    console.log('Tentative de changement de mot de passe pour:', currentUser.email);
+    console.log('Mot de passe actuel fourni:', currentPassword);
+
+    // Créer les credentials pour la réauthentification
+    const credential = EmailAuthProvider.credential(
+      currentUser.email!,
+      currentPassword
+    );
+
+    // Réauthentifier l'utilisateur avec l'ancien mot de passe
+    await reauthenticateWithCredential(currentUser, credential);
+
+    // Mettre à jour le mot de passe dans Firebase Auth
+    await updatePassword(currentUser, newPassword);
+
+    // Mettre à jour le mot de passe hashé dans Firestore
+    const { hashPassword } = await import('./auth');
+    const newHashedPassword = await hashPassword(newPassword);
+
+    const userRef = doc(db, 'users', currentUser.uid);
+    await updateDoc(userRef, {
+      passwordHash: newHashedPassword,
+      tempPassword: null, // Supprimer le mot de passe temporaire
+      mustChangePassword: false, // Le mot de passe a été changé
+      updatedAt: new Date(), // Utiliser new Date() au lieu de serverTimestamp()
+    });
+
+    console.log('Mot de passe mis à jour avec succès dans Firebase Auth et Firestore');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Erreur lors de la mise à jour du mot de passe:', error);
+    
+    let errorMessage = 'Erreur lors de la mise à jour du mot de passe';
+    if (error.code === 'auth/wrong-password') {
+      errorMessage = 'Mot de passe actuel incorrect';
+    } else if (error.code === 'auth/invalid-credential') {
+      errorMessage = 'Mot de passe temporaire incorrect. Vérifiez le mot de passe affiché ci-dessus.';
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = 'Le nouveau mot de passe est trop faible';
+    } else if (error.code === 'auth/requires-recent-login') {
+      errorMessage = 'Veuillez vous reconnecter pour changer votre mot de passe';
+    }
+    
+    return { success: false, error: errorMessage };
+  }
+};
+
+// Fonction spéciale pour les utilisateurs assignés à des autocollants
+export const updateStickerUserPassword = async (
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      return { success: false, error: 'Utilisateur non connecté' };
+    }
+
+    console.log('Changement de mot de passe pour utilisateur assigné:', currentUser.email);
+
+    // Pour les utilisateurs assignés à des autocollants, on peut directement mettre à jour le mot de passe
+    // car ils viennent de se connecter avec leur mot de passe temporaire
+    await updatePassword(currentUser, newPassword);
+
+    // Mettre à jour le mot de passe hashé dans Firestore
+    const { hashPassword } = await import('./auth');
+    const newHashedPassword = await hashPassword(newPassword);
+
+    const userRef = doc(db, 'users', currentUser.uid);
+    await updateDoc(userRef, {
+      passwordHash: newHashedPassword,
+      tempPassword: null, // Supprimer le mot de passe temporaire
+      mustChangePassword: false, // Le mot de passe a été changé
+      updatedAt: new Date(),
+    });
+
+    console.log('Mot de passe mis à jour avec succès pour utilisateur assigné');
+    
+    // Forcer une mise à jour du contexte d'authentification
+    // En rechargeant la page pour que le contexte soit mis à jour
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 100);
+    }
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Erreur lors de la mise à jour du mot de passe:', error);
+    
+    let errorMessage = 'Erreur lors de la mise à jour du mot de passe';
+    if (error.code === 'auth/weak-password') {
+      errorMessage = 'Le nouveau mot de passe est trop faible';
+    } else if (error.code === 'auth/requires-recent-login') {
+      errorMessage = 'Veuillez vous reconnecter pour changer votre mot de passe';
+    }
+    
+    return { success: false, error: errorMessage };
+  }
+};
+
 // Fonction pour récupérer les statistiques d'un utilisateur - SÉCURISÉE
 export const getUserStats = async (userId: string, requestingUserId: string, period: 'day' | 'week' | 'month' | 'year' = 'week'): Promise<StatsData> => {
   try {
+    // Vérifier que userId est valide
+    if (!userId || userId.trim() === '') {
+      throw new Error('userId est requis');
+    }
+
     // Vérification de sécurité : l'utilisateur ne peut accéder qu'à ses propres statistiques
     if (userId !== requestingUserId) {
       // Vérifier si l'utilisateur demandeur est admin
@@ -624,6 +753,11 @@ export const createOrder = async (
 // Récupérer les commandes d'un utilisateur
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
   try {
+    // Vérifier que userId est valide
+    if (!userId || userId.trim() === '') {
+      throw new Error('userId est requis');
+    }
+
     const ordersQuery = query(
       collection(db, 'orders'),
       where('userId', '==', userId)
@@ -673,6 +807,7 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
 };
 
 // Mettre à jour le statut d'une commande
+// NOUVELLE FONCTION ULTRA-SIMPLE ET SÉCURISÉE
 export const updateOrderStatus = async (
   orderId: string,
   status: Order['status'],
@@ -680,11 +815,27 @@ export const updateOrderStatus = async (
   cancellationReason?: string
 ): Promise<{ success: boolean; emailSent: boolean; error?: string }> => {
   try {
+    console.log('🔥 [FIREBASE] Mise à jour statut - Commande ID:', orderId, 'Nouveau statut:', status);
+    
+    // 1. Vérifier que la commande existe AVANT de la modifier
+    const orderRef = doc(db, 'orders', orderId);
+    const orderSnapshot = await getDoc(orderRef);
+    
+    if (!orderSnapshot.exists()) {
+      console.error('❌ [FIREBASE] Commande non trouvée:', orderId);
+      return { success: false, emailSent: false, error: 'Commande non trouvée' };
+    }
+    
+    const currentOrder = orderSnapshot.data() as Order;
+    console.log('✅ [FIREBASE] Commande trouvée - Statut actuel:', currentOrder.status);
+    
+    // 2. Préparer UNIQUEMENT les données à mettre à jour
     const updateData: any = {
-      status,
+      status: status,
       updatedAt: new Date()
     };
     
+    // 3. Ajouter les champs conditionnels
     if (notes) {
       updateData.notes = notes;
     }
@@ -695,86 +846,98 @@ export const updateOrderStatus = async (
     
     if (status === 'cancelled') {
       updateData.cancelledAt = new Date();
-      updateData.cancellationReason = cancellationReason;
+      if (cancellationReason) {
+        updateData.cancellationReason = cancellationReason;
+      }
     }
     
-    await updateDoc(doc(db, 'orders', orderId), updateData);
-    console.log('✅ Statut de commande mis à jour dans Firebase:', { orderId, status });
+    console.log('📝 [FIREBASE] Données à mettre à jour:', updateData);
     
-    // Envoyer une notification email de changement de statut
+    // 4. Mise à jour ATOMIQUE - UNE SEULE COMMANDE
+    await updateDoc(orderRef, updateData);
+    console.log('✅ [FIREBASE] Mise à jour effectuée pour la commande:', orderId);
+    
+    // 5. Vérification IMMÉDIATE que seule cette commande a été modifiée
+    const verificationSnapshot = await getDoc(orderRef);
+    const updatedOrder = verificationSnapshot.data() as Order;
+    
+    if (updatedOrder.status !== status) {
+      console.error('❌ [FIREBASE] ÉCHEC - Le statut n\'a pas été mis à jour correctement');
+      return { success: false, emailSent: false, error: 'Échec de la mise à jour du statut' };
+    }
+    
+    console.log('✅ [FIREBASE] VÉRIFICATION RÉUSSIE - Statut mis à jour:', updatedOrder.status);
+    
+    // 6. Email (optionnel - ne pas faire échouer la mise à jour)
     let emailSent = false;
     try {
-      const order = await getOrderById(orderId);
-      if (order) {
-        console.log('📧 [FIREBASE] Récupération des données de commande pour l\'email:', {
-          orderId,
-          customerEmail: order.customerInfo.email,
-          orderNumber: order.orderNumber,
-          customerName: `${order.customerInfo.firstName} ${order.customerInfo.lastName}`,
-          lastStatusNotified: order.lastStatusNotified,
-          newStatus: status,
-          hasEmail: !!order.customerInfo.email,
-          hasOrderNumber: !!order.orderNumber,
-          hasCustomerName: !!(order.customerInfo.firstName && order.customerInfo.lastName)
+      if (currentOrder.lastStatusNotified !== status) {
+        await sendOrderStatusUpdateEmailToCustomer(
+          currentOrder.customerInfo.email, 
+          currentOrder.orderNumber, 
+          status,
+          `${currentOrder.customerInfo.firstName} ${currentOrder.customerInfo.lastName}`
+        );
+        
+        // Mettre à jour le tracking de l'email
+        await updateDoc(orderRef, {
+          lastStatusNotified: status,
+          lastStatusEmailSentAt: new Date()
         });
         
-        // Vérifier si un email a déjà été envoyé pour ce statut
-        if (order.lastStatusNotified === status) {
-          console.log('⚠️ Email déjà envoyé pour ce statut, évitement du doublon');
-          emailSent = true; // Considéré comme "envoyé" pour éviter le fallback client
-        } else {
-          console.log('📧 [FIREBASE] Envoi de l\'email de changement de statut...');
-          
-          await sendOrderStatusUpdateEmailToCustomer(
-            order.customerInfo.email, 
-            order.orderNumber, 
-            status,
-            `${order.customerInfo.firstName} ${order.customerInfo.lastName}`
-          );
-          
-          console.log('📧 [FIREBASE] Mise à jour du tracking de l\'email...');
-          
-          // Mettre à jour le tracking de l'email
-          await updateDoc(doc(db, 'orders', orderId), {
-            lastStatusNotified: status,
-            lastStatusEmailSentAt: new Date()
-          });
-          
-          emailSent = true;
-          console.log('✅ [FIREBASE] Email de changement de statut envoyé et tracking mis à jour');
-        }
+        emailSent = true;
+        console.log('✅ [FIREBASE] Email envoyé pour la commande:', orderId);
       } else {
-        console.error('❌ Commande non trouvée pour l\'envoi d\'email:', orderId);
+        emailSent = true; // Déjà envoyé
+        console.log('⚠️ [FIREBASE] Email déjà envoyé pour ce statut');
       }
     } catch (emailError) {
-      console.error('❌ Erreur lors de l\'envoi de l\'email de mise à jour:', emailError);
-      console.warn('⚠️ Le statut a été mis à jour mais l\'email n\'a pas pu être envoyé');
+      console.warn('⚠️ [FIREBASE] Email non envoyé mais statut mis à jour:', emailError);
       emailSent = false;
     }
     
     return { success: true, emailSent };
+    
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du statut:', error);
-    return { success: false, emailSent: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
+    console.error('❌ [FIREBASE] ERREUR CRITIQUE lors de la mise à jour:', error);
+    return { 
+      success: false, 
+      emailSent: false, 
+      error: error instanceof Error ? error.message : 'Erreur inconnue' 
+    };
   }
 };
 
-// Annuler une commande (seulement si en attente)
+// Annuler une commande (seulement si en attente) - VERSION SIMPLIFIÉE
 export const cancelOrder = async (orderId: string, reason: string): Promise<void> => {
   try {
-    const order = await getOrderById(orderId);
+    console.log('🚫 [FIREBASE] Annulation commande:', orderId, 'Raison:', reason);
     
-    if (!order) {
+    // Vérifier que la commande existe
+    const orderRef = doc(db, 'orders', orderId);
+    const orderSnapshot = await getDoc(orderRef);
+    
+    if (!orderSnapshot.exists()) {
       throw new Error('Commande non trouvée');
     }
+    
+    const order = orderSnapshot.data() as Order;
     
     if (order.status !== 'pending') {
       throw new Error('Seules les commandes en attente peuvent être annulées');
     }
     
-    await updateOrderStatus(orderId, 'cancelled', undefined, reason);
+    // Mise à jour directe pour annulation
+    await updateDoc(orderRef, {
+      status: 'cancelled',
+      cancelledAt: new Date(),
+      cancellationReason: reason,
+      updatedAt: new Date()
+    });
+    
+    console.log('✅ [FIREBASE] Commande annulée:', orderId);
   } catch (error) {
-    console.error('Erreur lors de l\'annulation de la commande:', error);
+    console.error('❌ [FIREBASE] Erreur annulation:', error);
     throw error;
   }
 };

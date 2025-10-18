@@ -27,7 +27,7 @@ export default function StatisticsPage() {
   // Charger les vraies données depuis Firebase - SÉCURISÉ
   useEffect(() => {
     const loadStats = async () => {
-      if (user) {
+      if (user && user.id) {
         try {
           setIsLoading(true);
           // Passer l'ID de l'utilisateur connecté pour la vérification de sécurité

@@ -38,7 +38,9 @@ export default function OrdersManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState<'view' | 'edit'>('view');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [statusUpdate, setStatusUpdate] = useState({
     status: '',
@@ -85,6 +87,14 @@ export default function OrdersManagement() {
   const handleStatusUpdate = async () => {
     if (!selectedOrder || !statusUpdate.status) return;
 
+    // Protection contre les doubles clics (délai de 2 secondes)
+    const now = Date.now();
+    if (now - lastUpdateTime < 2000) {
+      console.log('⚠️ Mise à jour trop rapide, ignorée');
+      return;
+    }
+    setLastUpdateTime(now);
+
     try {
       console.log('🚀 [ADMIN UI] Début de la mise à jour de statut:', {
         orderId: selectedOrder.id,
@@ -130,20 +140,6 @@ export default function OrdersManagement() {
           console.log('✅ Email envoyé avec succès côté serveur');
         }
 
-        // Mise à jour immédiate de l'état local pour voir le changement instantanément
-        setLocalOrders(prevOrders => 
-          prevOrders.map(order => 
-            order.id === selectedOrder.id 
-              ? { ...order, status: statusUpdate.status as any }
-              : order
-          )
-        );
-        
-        // Fermer le modal
-        setShowModal(false);
-        setSelectedOrder(null);
-        setStatusUpdate({ status: '', cancellationReason: '' });
-        
         // Message de confirmation adapté
         const message = result.emailSent 
           ? `Statut mis à jour avec succès ! Email envoyé au client. (Source: ${result.source || 'firebase'})`
@@ -152,6 +148,22 @@ export default function OrdersManagement() {
         
         // Recharger les données depuis Firebase pour synchroniser
         await refetchOrders();
+        
+        // Forcer la mise à jour des données locales avec un petit délai
+        setTimeout(() => {
+          setLocalOrders(prevOrders => 
+            prevOrders.map(order => 
+              order.id === selectedOrder.id 
+                ? { ...order, status: statusUpdate.status as any }
+                : order
+            )
+          );
+        }, 100);
+        
+        // Fermer le modal APRÈS le rechargement
+        setShowModal(false);
+        setSelectedOrder(null);
+        setStatusUpdate({ status: '', cancellationReason: '' });
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erreur lors de la mise à jour');
@@ -443,6 +455,7 @@ export default function OrdersManagement() {
                     onClick={() => {
                       setSelectedOrder(order);
                       setStatusUpdate({ status: order.status, cancellationReason: '' });
+                      setModalType('edit');
                       setShowModal(true);
                     }}
                     className="text-[#F15A22] hover:text-[#F15A22]/80 p-1 sm:p-2 flex-shrink-0"
@@ -453,6 +466,7 @@ export default function OrdersManagement() {
                   <button
                     onClick={() => {
                       setSelectedOrder(order);
+                      setModalType('view');
                       setShowModal(true);
                     }}
                     className="text-blue-600 hover:text-blue-800 p-1 sm:p-2 flex-shrink-0"
@@ -475,7 +489,7 @@ export default function OrdersManagement() {
           setSelectedOrder(null);
           setStatusUpdate({ status: '', cancellationReason: '' });
         }}
-        title={`Commande #${selectedOrder?.orderNumber}`}
+        title={`Commande #${selectedOrder?.orderNumber} - ${modalType === 'edit' ? 'Modifier le statut' : 'Détails'}`}
         size="lg"
       >
         {selectedOrder && (
@@ -561,41 +575,43 @@ export default function OrdersManagement() {
               </div>
             </div>
 
-            {/* Status Update */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Mettre à jour le Statut</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nouveau Statut
-                  </label>
-                  <select
-                    value={statusUpdate.status}
-                    onChange={(e) => setStatusUpdate(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F15A22] focus:border-transparent"
-                  >
-                    <option value="pending">En Attente</option>
-                    <option value="processing">En Cours</option>
-                    <option value="delivered">Livré</option>
-                    <option value="cancelled">Annulé</option>
-                  </select>
-                </div>
-                {statusUpdate.status === 'cancelled' && (
+            {/* Status Update - Only for edit mode */}
+            {modalType === 'edit' && (
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Mettre à jour le Statut</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Raison d'annulation
+                      Nouveau Statut
                     </label>
-                    <input
-                      type="text"
-                      value={statusUpdate.cancellationReason}
-                      onChange={(e) => setStatusUpdate(prev => ({ ...prev, cancellationReason: e.target.value }))}
+                    <select
+                      value={statusUpdate.status}
+                      onChange={(e) => setStatusUpdate(prev => ({ ...prev, status: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F15A22] focus:border-transparent"
-                      placeholder="Raison de l'annulation..."
-                    />
+                    >
+                      <option value="pending">En Attente</option>
+                      <option value="processing">En Cours</option>
+                      <option value="delivered">Livré</option>
+                      <option value="cancelled">Annulé</option>
+                    </select>
                   </div>
-                )}
+                  {statusUpdate.status === 'cancelled' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Raison d'annulation
+                      </label>
+                      <input
+                        type="text"
+                        value={statusUpdate.cancellationReason}
+                        onChange={(e) => setStatusUpdate(prev => ({ ...prev, cancellationReason: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F15A22] focus:border-transparent"
+                        placeholder="Raison de l'annulation..."
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 mt-6">
@@ -609,16 +625,18 @@ export default function OrdersManagement() {
               >
                 Fermer
               </button>
-              <button
-                onClick={handleStatusUpdate}
-                disabled={isUpdating}
-                className={`flex items-center justify-center px-6 py-2 bg-gradient-to-r from-[#F15A22] to-[#F15A22]/80 text-white rounded-lg hover:opacity-90 transition-opacity ${
-                  isUpdating ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                <FaSave className="mr-2" />
-                {isUpdating ? 'Mise à jour...' : 'Mettre à jour'}
-              </button>
+              {modalType === 'edit' && (
+                <button
+                  onClick={handleStatusUpdate}
+                  disabled={isUpdating}
+                  className={`flex items-center justify-center px-6 py-2 bg-gradient-to-r from-[#F15A22] to-[#F15A22]/80 text-white rounded-lg hover:opacity-90 transition-opacity ${
+                    isUpdating ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  <FaSave className="mr-2" />
+                  {isUpdating ? 'Mise à jour...' : 'Mettre à jour'}
+                </button>
+              )}
             </div>
           </>
         )}

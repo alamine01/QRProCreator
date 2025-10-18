@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, getUserProfile, createUserProfile, saveUserProfile } from '@/lib/firebase';
 import { User } from '@/types';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -33,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setFirebaseUser(firebaseUser);
 
-        if (firebaseUser) {
+        if (firebaseUser && firebaseUser.uid) {
           try {
             // Essayer de récupérer le profil existant depuis Firestore
             let userData = await getUserProfile(firebaseUser.uid);
@@ -63,16 +64,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Pour l'instant, on utilise un timestamp pour éviter les conflits
             profileSlug = `${baseSlug}-${Date.now()}`;
 
+            // Récupérer les données utilisateur depuis sessionStorage si disponibles
+            let pendingUserData = null;
+            if (typeof window !== 'undefined') {
+              const storedData = sessionStorage.getItem('pendingUserData');
+              if (storedData) {
+                try {
+                  pendingUserData = JSON.parse(storedData);
+                  // Nettoyer les données après utilisation
+                  sessionStorage.removeItem('pendingUserData');
+                } catch (error) {
+                  console.error('Erreur lors du parsing des données utilisateur:', error);
+                }
+              }
+            }
+
+            const isGoogleUser = firebaseUser.providerData[0]?.providerId === 'google.com';
+            
             userData = {
               id: firebaseUser.uid,
-              googleId: firebaseUser.providerData[0]?.providerId === 'google.com' ? firebaseUser.uid : '',
+              googleId: isGoogleUser ? firebaseUser.uid : '',
               email: firebaseUser.email || '',
-              firstName: firstName,
-              lastName: lastName,
+              firstName: pendingUserData?.firstName || firstName,
+              lastName: pendingUserData?.lastName || lastName,
               profilePicture: firebaseUser.photoURL || '',
               profileSlug: profileSlug,
               profession: '',
-              phone: '',
+              phone: pendingUserData?.phone || '',
               phoneSecondary: '',
               phoneThird: '',
               phoneFourth: '',
@@ -91,6 +109,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               isAdmin: false,
               createdAt: new Date(),
               updatedAt: new Date(),
+              accountType: isGoogleUser ? 'google' : 'manual',
+              phoneCollected: pendingUserData?.phone ? true : false, // Marquer comme collecté si fourni lors de l'inscription manuelle
             };
 
             // Créer le profil dans Firestore
