@@ -77,8 +77,8 @@ export default function AdminStatistics() {
     try {
       setIsLoading(true);
       
-      // Fetch basic stats
-      const statsResponse = await fetch('/api/admin/stats');
+      // Fetch basic stats (utiliser stats-real pour les données Firebase)
+      const statsResponse = await fetch('/api/admin/stats-real');
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(prev => ({ ...prev, ...statsData }));

@@ -51,12 +51,12 @@ export default function OrdersManagement() {
   // État local pour les commandes (permet la mise à jour immédiate)
   const [localOrders, setLocalOrders] = useState<Order[]>([]);
   
-  // Synchroniser les commandes locales avec les données du hook (seulement au chargement initial)
+  // Synchroniser les commandes locales avec les données du hook
   useEffect(() => {
-    if (orders && localOrders.length === 0) {
+    if (orders) {
       setLocalOrders(orders);
     }
-  }, [orders, localOrders.length]);
+  }, [orders]);
 
   // Utiliser useMemo pour optimiser le filtrage
   const filteredOrders = useMemo(() => {
@@ -150,8 +150,8 @@ export default function OrdersManagement() {
           : `Statut mis à jour avec succès ! (Source: ${result.source || 'firebase'})`;
         alert(message);
         
-        // Ne pas recharger automatiquement - laisser l'état local intact
-        // Le rechargement se fera lors de la prochaine visite de la page
+        // Recharger les données depuis Firebase pour synchroniser
+        await refetchOrders();
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erreur lors de la mise à jour');
