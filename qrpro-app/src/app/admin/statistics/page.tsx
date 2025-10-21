@@ -61,6 +61,9 @@ export default function AdminStatistics() {
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');
+  const [documentStats, setDocumentStats] = useState<any[]>([]);
+  const [totalScans, setTotalScans] = useState(0);
+  const [totalDownloads, setTotalDownloads] = useState(0);
 
   useEffect(() => {
     if (!loading && (!user || !user.isAdmin)) {
@@ -115,10 +118,65 @@ export default function AdminStatistics() {
         const cardsData = await cardsResponse.json();
         setBusinessCards(cardsData);
       }
+
+      // Fetch document statistics
+      await fetchDocumentStatistics();
     } catch (error) {
       console.error('Error fetching statistics:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchDocumentStatistics = async () => {
+    try {
+      // Récupérer tous les documents
+      const documentsResponse = await fetch('/api/admin/documents');
+      if (documentsResponse.ok) {
+        const documents = await documentsResponse.json();
+        
+        let totalScansCount = 0;
+        let totalDownloadsCount = 0;
+        const documentStatsArray = [];
+
+        // Pour chaque document, récupérer les statistiques détaillées
+        for (const doc of documents) {
+          try {
+            const statsResponse = await fetch(`/api/document-stats/${doc.id}?email=${doc.ownerEmail}&password=${doc.ownerPassword || ''}`);
+            if (statsResponse.ok) {
+              const stats = await statsResponse.json();
+              
+              totalScansCount += stats.qrScans?.length || 0;
+              totalDownloadsCount += stats.downloads?.length || 0;
+              
+              documentStatsArray.push({
+                ...doc,
+                qrScans: stats.qrScans || [],
+                downloads: stats.downloads || [],
+                // Numéroter les scans correctement (le plus récent = numéro le plus élevé)
+                numberedScans: (stats.qrScans || []).map((scan: any, index: number) => ({
+                  ...scan,
+                  scanNumber: (stats.qrScans || []).length - index
+                }))
+              });
+            }
+          } catch (error) {
+            console.log(`Erreur pour document ${doc.id}:`, error);
+          }
+        }
+
+        setDocumentStats(documentStatsArray);
+        setTotalScans(totalScansCount);
+        setTotalDownloads(totalDownloadsCount);
+        
+        console.log('📊 Statistiques documents:', {
+          totalDocuments: documentStatsArray.length,
+          totalScans: totalScansCount,
+          totalDownloads: totalDownloadsCount
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des statistiques de documents:', error);
     }
   };
 
@@ -313,6 +371,97 @@ export default function AdminStatistics() {
               </div>
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ml-2 sm:ml-3">
                 <FaArrowUp className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Document Statistics */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0 flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Téléchargements</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{totalDownloads}</p>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-orange-500 h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${Math.min((totalDownloads / Math.max(totalDownloads, 1)) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ml-2 sm:ml-3">
+                <FaDownload className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0 flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Scans QR</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{totalScans}</p>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${Math.min((totalScans / Math.max(totalScans, 1)) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ml-2 sm:ml-3">
+                <FaEye className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0 flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Documents</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{documentStats.length}</p>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${Math.min((documentStats.length / Math.max(documentStats.length, 1)) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ml-2 sm:ml-3">
+                <FaChartBar className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0 flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Cette semaine</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+                  {documentStats.reduce((acc, doc) => {
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return acc + (doc.qrScans || []).filter((scan: any) => {
+                      const scanDate = scan.timestamp?.toDate ? scan.timestamp.toDate() : new Date(scan.timestamp);
+                      return scanDate >= weekAgo;
+                    }).length;
+                  }, 0)}
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-purple-500 h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${Math.min((documentStats.reduce((acc, doc) => {
+                      const weekAgo = new Date();
+                      weekAgo.setDate(weekAgo.getDate() - 7);
+                      return acc + (doc.qrScans || []).filter((scan: any) => {
+                        const scanDate = scan.timestamp?.toDate ? scan.timestamp.toDate() : new Date(scan.timestamp);
+                        return scanDate >= weekAgo;
+                      }).length;
+                    }, 0) / Math.max(totalScans, 1)) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ml-2 sm:ml-3">
+                <FaCalendar className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               </div>
             </div>
           </div>
