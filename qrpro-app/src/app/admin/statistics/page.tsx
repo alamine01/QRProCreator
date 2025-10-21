@@ -173,8 +173,13 @@ export default function AdminStatistics() {
         setTotalScans(totalScansCount);
         setTotalDownloads(totalDownloadsCount);
         
-        console.log('📊 Statistiques documents:', {
+        console.log('📊 Statistiques documents calculées:', {
           totalDocuments: documentStatsArray.length,
+          totalScans: totalScansCount,
+          totalDownloads: totalDownloadsCount
+        });
+        
+        console.log('📊 Compteurs mis à jour dans l\'état:', {
           totalScans: totalScansCount,
           totalDownloads: totalDownloadsCount
         });
@@ -191,20 +196,26 @@ export default function AdminStatistics() {
       if (response.ok) {
         const globalStats = await response.json();
         
-        setTotalScans(globalStats.totalScans);
-        setTotalDownloads(globalStats.totalDownloads);
+        console.log('📊 Statistiques globales reçues:', globalStats);
         
-        console.log('📊 Statistiques globales mises à jour:', {
-          totalScans: globalStats.totalScans,
-          totalDownloads: globalStats.totalDownloads,
-          weeklyScans: globalStats.weeklyScans,
-          totalDocuments: globalStats.totalDocuments
+        setTotalScans(globalStats.totalScans || 0);
+        setTotalDownloads(globalStats.totalDownloads || 0);
+        
+        console.log('📊 Compteurs mis à jour:', {
+          totalScans: globalStats.totalScans || 0,
+          totalDownloads: globalStats.totalDownloads || 0
         });
       } else {
-        console.log('⚠️ Erreur lors de la récupération des statistiques globales');
+        console.log('⚠️ Erreur lors de la récupération des statistiques globales:', response.status);
+        // Fallback: utiliser les statistiques des documents individuels
+        console.log('🔄 Utilisation du fallback...');
+        await fetchDocumentStatistics();
       }
     } catch (error) {
       console.error('❌ Erreur lors de la récupération des statistiques globales:', error);
+      // Fallback: utiliser les statistiques des documents individuels
+      console.log('🔄 Utilisation du fallback après erreur...');
+      await fetchDocumentStatistics();
     }
   };
 
