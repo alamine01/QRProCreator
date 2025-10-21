@@ -106,7 +106,7 @@ export default function AdminStatistics() {
       const usersResponse = await fetch('/api/admin/users?limit=10');
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
-        setRecentUsers(usersData);
+        setRecentUsers(usersData.success ? usersData.data : []);
       }
 
       // Fetch business cards
@@ -373,14 +373,14 @@ export default function AdminStatistics() {
               <h2 className="text-xl font-bold text-gray-900">Nouveaux Utilisateurs</h2>
             </div>
             <div className="p-6">
-              {recentUsers.length === 0 ? (
+              {!recentUsers || recentUsers.length === 0 ? (
                 <div className="text-center py-8">
                   <FaUsers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">Aucun nouvel utilisateur</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {recentUsers.slice(0, 5).map((user) => (
+                  {(recentUsers || []).slice(0, 5).map((user) => (
                     <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-gradient-to-r from-[#F15A22] to-[#F15A22]/80 rounded-full flex items-center justify-center text-white text-sm font-medium">

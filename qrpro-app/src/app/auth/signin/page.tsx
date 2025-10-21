@@ -34,9 +34,15 @@ export default function SignInPage() {
     try {
       await signInWithGoogle();
       // La redirection se fera automatiquement via useEffect
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur de connexion:', error);
-      setError('Erreur lors de la connexion avec Google');
+      
+      // Gérer spécifiquement l'erreur de domaine non autorisé
+      if (error.code === 'auth/unauthorized-domain') {
+        setError('Domaine non autorisé. Veuillez utiliser la connexion par email ou contacter l\'administrateur.');
+      } else {
+        setError('Erreur lors de la connexion avec Google');
+      }
     }
   };
 

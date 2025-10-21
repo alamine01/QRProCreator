@@ -13,6 +13,7 @@ import {
   FaCreditCard,
   FaFileUpload,
   FaQrcode,
+  FaCalendarAlt,
   FaArrowLeft,
   FaCog,
   FaBars,
@@ -68,6 +69,13 @@ const adminNavItems = [
     icon: FaQrcode,
     description: 'Gestion du stock d\'autocollants',
     preloadPage: 'stickers' as const
+  },
+  {
+    name: 'Événements',
+    href: '/admin/events',
+    icon: FaCalendarAlt,
+    description: 'Gestion des événements QRPRO',
+    preloadPage: 'events' as const
   }
 ];
 

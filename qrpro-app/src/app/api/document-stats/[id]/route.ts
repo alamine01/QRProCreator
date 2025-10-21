@@ -134,35 +134,37 @@ export async function GET(
       qrScans = [];
     }
     
-    // Simuler des données de téléchargement (dans un vrai système, vous auriez une collection séparée)
-    const downloads = [
-      {
-        timestamp: document.uploadedAt,
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        ip: '192.168.1.1'
-      }
-    ];
-    
-    // Ajouter quelques téléchargements simulés pour la démo
-    for (let i = 0; i < Math.min(document.downloadCount, 10); i++) {
-      const downloadDate = new Date(document.uploadedAt.toDate());
-      downloadDate.setDate(downloadDate.getDate() + Math.floor(Math.random() * 30));
+    // Récupérer les téléchargements réels depuis la collection documentDownloads
+    let downloads: any[] = [];
+    try {
+      const downloadsQuery = query(
+        collection(db, 'documentDownloads'),
+        where('documentId', '==', id),
+        limit(50) // Limiter à 50 téléchargements récents
+      );
+
+      const downloadsSnapshot = await getDocs(downloadsQuery);
+      downloads = downloadsSnapshot.docs.map((doc: any) => ({
+        id: doc.id,
+        timestamp: doc.data().timestamp,
+        userAgent: doc.data().userAgent,
+        ip: doc.data().ip,
+        location: doc.data().location
+      }));
       
-      downloads.push({
-        timestamp: {
-          toDate: () => downloadDate
-        },
-        userAgent: ['Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0)'].sort(() => 0.5 - Math.random())[0],
-        ip: `192.168.1.${Math.floor(Math.random() * 255)}`
+      // Trier manuellement côté client (plus fiable)
+      downloads.sort((a: any, b: any) => {
+        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+        return dateB.getTime() - dateA.getTime();
       });
+      
+      console.log(`💾 ${downloads.length} téléchargements trouvés pour le document ${id}`);
+    } catch (downloadsError) {
+      console.log('⚠️ Collection documentDownloads non accessible ou vide:', downloadsError instanceof Error ? downloadsError.message : 'Unknown error');
+      console.log('💾 Utilisation de données vides pour les téléchargements');
+      downloads = [];
     }
-    
-    // Trier par date décroissante
-    downloads.sort((a, b) => {
-      const dateA = a.timestamp.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-      const dateB = b.timestamp.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-      return dateB.getTime() - dateA.getTime();
-    });
     
     const stats = {
       id: document.id,

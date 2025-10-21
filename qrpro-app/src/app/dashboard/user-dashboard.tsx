@@ -32,7 +32,8 @@ import {
   X,
   ShoppingCart,
   Package,
-  Settings
+  Settings,
+  Calendar
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -104,6 +105,10 @@ export default function DashboardPage() {
 
   const handleViewStats = () => {
     router.push('/dashboard/statistics');
+  };
+
+  const handleViewEvents = () => {
+    router.push('/dashboard/events');
   };
 
   if (loading) {
@@ -255,6 +260,22 @@ export default function DashboardPage() {
                       <div className="text-left">
                         <div className="font-medium text-gray-900 text-sm">Statistiques</div>
                         <div className="text-xs text-gray-600">Analyser les scans de votre QR</div>
+                      </div>
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        handleViewEvents();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 p-3 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg hover:from-indigo-100 hover:to-indigo-200 transition-all duration-200"
+                    >
+                      <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+                        <Calendar className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-gray-900 text-sm">Mes Événements</div>
+                        <div className="text-xs text-gray-600">Gérer vos événements QRPRO</div>
                       </div>
                     </button>
 
@@ -583,6 +604,21 @@ export default function DashboardPage() {
                 <div>
                   <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Statistiques</h3>
                   <p className="text-xs sm:text-sm text-gray-600">Analyser les scans de votre QR</p>
+                </div>
+              </div>
+            </button>
+
+            <button 
+              onClick={handleViewEvents}
+              className="group p-4 sm:p-6 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl sm:rounded-2xl hover:from-indigo-100 hover:to-indigo-200 transition-all duration-300 border border-indigo-200/50"
+            >
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-500 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Mes Événements</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">Gérer vos événements QRPRO</p>
                 </div>
               </div>
             </button>

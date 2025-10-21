@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de Check-in - {{eventName}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #10B981;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #10B981;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 20px;
+            color: #1F2937;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #6B7280;
+            font-size: 14px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .success-box {
+            background-color: #D1FAE5;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #10B981;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 48px;
+            color: #10B981;
+            margin-bottom: 10px;
+        }
+        .info-box {
+            background-color: #F3F4F6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+        }
+        .info-value {
+            color: #1F2937;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #E5E7EB;
+            color: #6B7280;
+            font-size: 12px;
+        }
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .qr-code img {
+            max-width: 200px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">QR Pro Creator</div>
+            <div class="title">Check-in Confirmé</div>
+            <div class="subtitle">Merci de votre participation</div>
+        </div>
+
+        <div class="content">
+            <p>Bonjour <strong>{{guestName}}</strong>,</p>
+            
+            <div class="success-box">
+                <div class="success-icon">✓</div>
+                <h3 style="margin: 0; color: #10B981;">Votre check-in a été enregistré avec succès !</h3>
+            </div>
+
+            <p>Nous sommes ravis de vous confirmer votre participation à l'événement <strong>{{eventName}}</strong>.</p>
+
+            <div class="info-box">
+                <div class="info-item">
+                    <span class="info-label">Événement :</span>
+                    <span class="info-value">{{eventName}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date :</span>
+                    <span class="info-value">{{eventDate}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Lieu :</span>
+                    <span class="info-value">{{eventLocation}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Heure d'enregistrement :</span>
+                    <span class="info-value">{{checkinTime}}</span>
+                </div>
+            </div>
+
+            <p><strong>Informations importantes :</strong></p>
+            <ul>
+                <li>Conservez cet email comme preuve de votre inscription</li>
+                <li>Arrivez quelques minutes avant le début de l'événement</li>
+                <li>En cas de changement, contactez l'organisateur</li>
+            </ul>
+
+            <p>Nous avons hâte de vous voir à l'événement !</p>
+        </div>
+
+        <div class="footer">
+            <p>Ce message a été envoyé automatiquement par QR Pro Creator</p>
+            <p>Pour toute question, contactez l'organisateur de l'événement</p>
+        </div>
+    </div>
+</body>
+</html>

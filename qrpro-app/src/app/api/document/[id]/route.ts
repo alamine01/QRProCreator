@@ -37,6 +37,27 @@ export async function GET(
           console.error('❌ Erreur lors de l\'incrémentation du compteur:', countError);
         }
         
+        // Enregistrer le téléchargement dans la collection documentDownloads pour le tracking
+        try {
+          const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+          const { db } = await import('@/lib/firebase');
+          
+          const userAgent = request.headers.get('user-agent') || 'Unknown';
+          const forwarded = request.headers.get('x-forwarded-for');
+          const ip = forwarded ? forwarded.split(',')[0] : 'Unknown';
+          
+          await addDoc(collection(db, 'documentDownloads'), {
+            documentId: id,
+            timestamp: serverTimestamp(),
+            userAgent: userAgent,
+            ip: ip,
+            location: null
+          });
+          console.log('📊 Téléchargement enregistré pour le tracking');
+        } catch (trackingError) {
+          console.error('❌ Erreur lors de l\'enregistrement du tracking:', trackingError);
+        }
+        
         // Rediriger directement vers le fichier
         let directUrl;
         if (document.filePath) {

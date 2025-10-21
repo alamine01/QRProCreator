@@ -34,22 +34,22 @@ export function HeroSection() {
         </div>
       </div>
 
-      <div className="relative container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div className="relative container mx-auto px-4 py-6 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
           {/* Contenu texte à gauche */}
           <div className="text-left">
             {/* Welcome Text avec forme pill */}
-            <div className="flex items-center mb-8">
-              <div className="bg-gradient-to-r from-orange-100 to-orange-200 px-4 py-2 rounded-full border border-orange-200/50 shadow-sm">
+            <div className="flex items-center mb-6 sm:mb-8">
+              <div className="bg-gradient-to-r from-orange-100 to-orange-200 px-3 sm:px-4 py-2 rounded-full border border-orange-200/50 shadow-sm">
                 <div className="flex items-center">
-                  <div className="w-2 h-2 bg-primary-500 rounded-full mr-3"></div>
-                  <span className="text-primary-700 font-medium text-sm">Bienvenue dans l'avenir du partage de contacts</span>
+                  <div className="w-2 h-2 bg-primary-500 rounded-full mr-2 sm:mr-3"></div>
+                  <span className="text-primary-700 font-medium text-xs sm:text-sm">Bienvenue dans l'avenir du partage de contacts</span>
                 </div>
               </div>
             </div>
 
           {/* Main Heading */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
             Créez votre{' '}
               <span className="gradient-text">QR code personnel</span>
             <br />
@@ -57,52 +57,54 @@ export function HeroSection() {
           </h1>
 
           {/* Subtitle */}
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl leading-relaxed">
+            <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl leading-relaxed">
               Transformez vos informations de contact en un magnifique QR code scannable. 
               Partagez votre profil professionnel, réseaux sociaux et coordonnées en un seul scan.
           </p>
 
           {/* CTA Buttons */}
                    <div className="mb-8">
-                     <div className="flex flex-col sm:flex-row gap-4">
+                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             {user ? (
               <Link
                 href="/dashboard"
-                           className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                           className="bg-primary-500 hover:bg-primary-600 text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1 w-full sm:w-auto"
               >
-                           <QrCode className="h-5 w-5" />
-                <span>Accéder au tableau de bord</span>
-                <ArrowRight className="h-5 w-5" />
+                           <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden sm:inline">Accéder au tableau de bord</span>
+                <span className="sm:hidden">Tableau de bord</span>
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
             ) : (
                          <Link
                            href="/auth/signin"
-                           className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                           className="bg-primary-500 hover:bg-primary-600 text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1 w-full sm:w-auto"
                          >
-                           <QrCode className="h-5 w-5" />
-                           <span>Créer Mon Profil Gratuit</span>
-                           <ArrowRight className="h-5 w-5" />
+                           <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
+                           <span className="hidden sm:inline">Créer Mon Profil Gratuit</span>
+                           <span className="sm:hidden">Créer Mon Profil</span>
+                           <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
                          </Link>
             )}
             
             <Link
               href="#features"
-                         className="bg-white border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                         className="bg-white border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1 w-full sm:w-auto"
             >
-                         <Play className="h-5 w-5" />
+                         <Play className="h-4 w-4 sm:h-5 sm:w-5" />
                          <span>En Savoir Plus</span>
             </Link>
                      </div>
                    </div>
 
                    {/* Éléments verts avec coches */}
-                   <div className="flex flex-col sm:flex-row gap-4 text-sm">
+                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 text-sm">
                      <div className="flex items-center space-x-2">
-                       <Check className="h-4 w-4 text-green-500" />
+                       <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
                        <span className="text-gray-700 font-medium">100% Gratuit</span>
                      </div>
                      <div className="flex items-center space-x-2">
-                       <Check className="h-4 w-4 text-green-500" />
+                       <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
                        <span className="text-gray-700 font-medium">QR Instantané</span>
                      </div>
                    </div>

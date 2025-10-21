@@ -1,39 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllUsers, updateUserAdminStatus } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-// GET /api/admin/users - Get all users
 export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url);
-    const limitParam = url.searchParams.get('limit');
-    const limitCount = limitParam ? parseInt(limitParam) : undefined;
-
-    const users = await getAllUsers(limitCount);
-    return NextResponse.json(users);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-// PUT /api/admin/users - Update user (promote to admin, etc.)
-export async function PUT(request: NextRequest) {
-  try {
-    const data = await request.json();
+    // Récupérer tous les utilisateurs
+    const usersCollection = collection(db, 'users');
     
-    if (data.id && data.isAdmin !== undefined) {
-      await updateUserAdminStatus(data.id, data.isAdmin);
-      
-      // Retourner les données mises à jour
-      const users = await getAllUsers();
-      const updatedUser = users.find(user => user.id === data.id);
-      
-      return NextResponse.json(updatedUser);
+    // Essayer d'abord avec orderBy, sinon sans
+    let querySnapshot;
+    try {
+      const q = query(usersCollection, orderBy('createdAt', 'desc'));
+      querySnapshot = await getDocs(q);
+    } catch (orderByError) {
+      // Si orderBy échoue, récupérer sans tri
+      querySnapshot = await getDocs(usersCollection);
     }
     
-    return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
+    const users = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    return NextResponse.json({ success: true, data: users });
   } catch (error) {
-    console.error('Error updating user:', error);
-    return NextResponse.json({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+    console.error('Erreur lors de la récupération des utilisateurs:', error);
+    return NextResponse.json(
+      { success: false, error: 'Erreur lors de la récupération des utilisateurs' },
+      { status: 500 }
+    );
   }
 }

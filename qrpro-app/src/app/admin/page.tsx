@@ -21,7 +21,8 @@ import {
   FaTimesCircle,
   FaFileUpload,
   FaDownload,
-  FaQrcode
+  FaQrcode,
+  FaCalendarAlt
 } from 'react-icons/fa';
 import { AdminPageLoader } from '@/components/ui/LoadingSpinner';
 
@@ -227,6 +228,13 @@ export default function AdminDashboard() {
             >
               <FaQrcode className="mr-2" />
               Gérer les Autocollants
+            </button>
+            <button
+              onClick={() => router.push('/admin/events')}
+              className="flex items-center justify-center p-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:opacity-90 transition-opacity"
+            >
+              <FaCalendarAlt className="mr-2" />
+              Gérer les Événements
             </button>
           </div>
         </div>
