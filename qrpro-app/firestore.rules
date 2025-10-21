@@ -77,14 +77,12 @@ service cloud.firestore {
     
     // Règles pour les scans QR - SÉCURISÉES
     match /qrScans/{scanId} {
-      allow read: if true; // Permettre la lecture pour les statistiques
-      allow create: if true; // Permettre l'enregistrement des scans QR
+      allow read, write: if true; // Permettre toutes les opérations pour le tracking
     }
     
     // Règles pour les téléchargements de documents - SÉCURISÉES
     match /documentDownloads/{downloadId} {
-      allow read: if true; // Permettre la lecture pour les statistiques
-      allow create: if true; // Permettre l'enregistrement des téléchargements
+      allow read, write: if true; // Permettre toutes les opérations pour le tracking
     }
     
     // Règles pour les événements - TEMPORAIREMENT OUVERTES POUR LE DÉBOGAGE

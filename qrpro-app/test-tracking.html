@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Tracking</title>
+</head>
+<body>
+    <h1>Test du Tracking</h1>
+    <button onclick="testScan()">Tester un Scan QR</button>
+    <button onclick="testDownload()">Tester un Téléchargement</button>
+    <button onclick="checkStats()">Vérifier les Statistiques</button>
+    <div id="result"></div>
+
+    <script>
+        let documentId = null;
+
+        async function testScan() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Test du scan en cours...';
+            
+            try {
+                // Récupérer un document
+                const docsResponse = await fetch('/api/admin/documents');
+                const documents = await docsResponse.json();
+                
+                if (documents.length === 0) {
+                    resultDiv.innerHTML = 'Aucun document trouvé. Créez d\'abord un document.';
+                    return;
+                }
+                
+                documentId = documents[0].id;
+                resultDiv.innerHTML = `Document sélectionné: ${documents[0].name} (ID: ${documentId})<br><br>`;
+                
+                // Simuler un scan QR
+                const scanResponse = await fetch(`/api/document-stats/${documentId}/scan`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'Test-Browser/1.0'
+                    }
+                });
+                
+                if (scanResponse.ok) {
+                    resultDiv.innerHTML += '✅ Scan QR simulé avec succès !<br>';
+                } else {
+                    resultDiv.innerHTML += `❌ Erreur scan: ${scanResponse.status}<br>`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Erreur: ${error.message}`;
+            }
+        }
+
+        async function testDownload() {
+            if (!documentId) {
+                document.getElementById('result').innerHTML = 'Sélectionnez d\'abord un document avec le test de scan.';
+                return;
+            }
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML += 'Test du téléchargement en cours...<br>';
+            
+            try {
+                // Simuler un téléchargement
+                const downloadResponse = await fetch(`/api/document-stats/${documentId}/download`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'Test-Browser/1.0'
+                    }
+                });
+                
+                if (downloadResponse.ok) {
+                    resultDiv.innerHTML += '✅ Téléchargement simulé avec succès !<br>';
+                } else {
+                    resultDiv.innerHTML += `❌ Erreur téléchargement: ${downloadResponse.status}<br>`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `❌ Erreur: ${error.message}<br>`;
+            }
+        }
+
+        async function checkStats() {
+            if (!documentId) {
+                document.getElementById('result').innerHTML = 'Sélectionnez d\'abord un document avec le test de scan.';
+                return;
+            }
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML += 'Vérification des statistiques...<br>';
+            
+            try {
+                // Récupérer les statistiques globales
+                const globalResponse = await fetch('/api/admin/document-stats-global');
+                if (globalResponse.ok) {
+                    const globalStats = await globalResponse.json();
+                    resultDiv.innerHTML += `<br>📊 Statistiques globales:<br>`;
+                    resultDiv.innerHTML += `Scans QR: ${globalStats.totalScans}<br>`;
+                    resultDiv.innerHTML += `Téléchargements: ${globalStats.totalDownloads}<br>`;
+                    resultDiv.innerHTML += `Cette semaine: ${globalStats.weeklyScans}<br>`;
+                    resultDiv.innerHTML += `Documents: ${globalStats.totalDocuments}<br>`;
+                } else {
+                    resultDiv.innerHTML += '❌ Erreur lors de la récupération des statistiques globales<br>';
+                }
+                
+                // Récupérer les statistiques du document
+                const docsResponse = await fetch('/api/admin/documents');
+                const documents = await docsResponse.json();
+                const document = documents.find(doc => doc.id === documentId);
+                
+                if (document) {
+                    const statsResponse = await fetch(`/api/document-stats/${documentId}?email=${document.ownerEmail}&password=${document.ownerPassword || ''}`);
+                    if (statsResponse.ok) {
+                        const stats = await statsResponse.json();
+                        resultDiv.innerHTML += `<br>📄 Statistiques du document:<br>`;
+                        resultDiv.innerHTML += `Scans trackés: ${stats.qrScans?.length || 0}<br>`;
+                        resultDiv.innerHTML += `Téléchargements trackés: ${stats.downloads?.length || 0}<br>`;
+                        resultDiv.innerHTML += `Compteur scans: ${stats.qrScanCount || 0}<br>`;
+                        resultDiv.innerHTML += `Compteur téléchargements: ${stats.downloadCount || 0}<br>`;
+                    }
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `❌ Erreur: ${error.message}<br>`;
+            }
+        }
+    </script>
+</body>
+</html>
