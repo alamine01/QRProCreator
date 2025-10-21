@@ -121,6 +121,9 @@ export default function AdminStatistics() {
 
       // Fetch document statistics
       await fetchDocumentStatistics();
+      
+      // Fetch global document statistics
+      await fetchGlobalDocumentStatistics();
     } catch (error) {
       console.error('Error fetching statistics:', error);
     } finally {
@@ -146,6 +149,7 @@ export default function AdminStatistics() {
             if (statsResponse.ok) {
               const stats = await statsResponse.json();
               
+              // Utiliser les vrais compteurs des collections de tracking
               totalScansCount += stats.qrScans?.length || 0;
               totalDownloadsCount += stats.downloads?.length || 0;
               
@@ -177,6 +181,30 @@ export default function AdminStatistics() {
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques de documents:', error);
+    }
+  };
+
+  const fetchGlobalDocumentStatistics = async () => {
+    try {
+      console.log('📊 Récupération des statistiques globales...');
+      const response = await fetch('/api/admin/document-stats-global');
+      if (response.ok) {
+        const globalStats = await response.json();
+        
+        setTotalScans(globalStats.totalScans);
+        setTotalDownloads(globalStats.totalDownloads);
+        
+        console.log('📊 Statistiques globales mises à jour:', {
+          totalScans: globalStats.totalScans,
+          totalDownloads: globalStats.totalDownloads,
+          weeklyScans: globalStats.weeklyScans,
+          totalDocuments: globalStats.totalDocuments
+        });
+      } else {
+        console.log('⚠️ Erreur lors de la récupération des statistiques globales');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la récupération des statistiques globales:', error);
     }
   };
 

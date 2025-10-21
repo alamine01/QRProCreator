@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API Document</title>
+</head>
+<body>
+    <h1>Test de l'API Document</h1>
+    <button onclick="testDocumentAPI()">Tester l'API Document</button>
+    <div id="result"></div>
+
+    <script>
+        async function testDocumentAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                // Récupérer d'abord un document existant
+                const documentsResponse = await fetch('/api/admin/documents');
+                if (!documentsResponse.ok) {
+                    throw new Error('Impossible de récupérer les documents');
+                }
+                
+                const documents = await documentsResponse.json();
+                if (documents.length === 0) {
+                    resultDiv.innerHTML = 'Aucun document trouvé. Créez d\'abord un document.';
+                    return;
+                }
+                
+                const document = documents[0];
+                resultDiv.innerHTML = `Document sélectionné: ${document.name} (ID: ${document.id})<br><br>`;
+                
+                // Tester l'API document
+                const documentResponse = await fetch(`/api/document/${document.id}`, {
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': 'Test-Browser/1.0'
+                    }
+                });
+                
+                resultDiv.innerHTML += `Status: ${documentResponse.status}<br>`;
+                resultDiv.innerHTML += `Headers: ${JSON.stringify(Object.fromEntries(documentResponse.headers.entries()))}<br><br>`;
+                
+                if (documentResponse.ok) {
+                    resultDiv.innerHTML += '✅ API Document fonctionne !<br>';
+                    resultDiv.innerHTML += 'Redirection vers: ' + documentResponse.url + '<br>';
+                } else {
+                    const errorText = await documentResponse.text();
+                    resultDiv.innerHTML += `❌ Erreur: ${errorText}<br>`;
+                }
+                
+                // Attendre et vérifier les statistiques
+                setTimeout(async () => {
+                    try {
+                        const statsResponse = await fetch(`/api/document-stats/${document.id}?email=${document.ownerEmail}&password=${document.ownerPassword || ''}`);
+                        if (statsResponse.ok) {
+                            const stats = await statsResponse.json();
+                            resultDiv.innerHTML += `<br>📊 Statistiques:<br>`;
+                            resultDiv.innerHTML += `Téléchargements trackés: ${stats.downloads?.length || 0}<br>`;
+                            resultDiv.innerHTML += `Scans trackés: ${stats.qrScans?.length || 0}<br>`;
+                            resultDiv.innerHTML += `Compteur téléchargements: ${stats.downloadCount || 0}<br>`;
+                            resultDiv.innerHTML += `Compteur scans: ${stats.qrScanCount || 0}<br>`;
+                        }
+                    } catch (error) {
+                        resultDiv.innerHTML += `<br>❌ Erreur stats: ${error.message}<br>`;
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Erreur: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
