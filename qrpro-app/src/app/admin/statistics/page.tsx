@@ -119,11 +119,8 @@ export default function AdminStatistics() {
         setBusinessCards(cardsData);
       }
 
-      // Fetch document statistics
+      // Fetch document statistics (utilise les collections de tracking)
       await fetchDocumentStatistics();
-      
-      // Fetch global document statistics
-      await fetchGlobalDocumentStatistics();
     } catch (error) {
       console.error('Error fetching statistics:', error);
     } finally {
@@ -150,13 +147,19 @@ export default function AdminStatistics() {
               const stats = await statsResponse.json();
               
               // Utiliser les vrais compteurs des collections de tracking
-              totalScansCount += stats.qrScans?.length || 0;
-              totalDownloadsCount += stats.downloads?.length || 0;
+              const realScansCount = stats.qrScans?.length || 0;
+              const realDownloadsCount = stats.downloads?.length || 0;
+              
+              totalScansCount += realScansCount;
+              totalDownloadsCount += realDownloadsCount;
               
               documentStatsArray.push({
                 ...doc,
                 qrScans: stats.qrScans || [],
                 downloads: stats.downloads || [],
+                // Utiliser les vrais compteurs au lieu des compteurs du document
+                qrScanCount: realScansCount,
+                downloadCount: realDownloadsCount,
                 // Numéroter les scans correctement (le plus récent = numéro le plus élevé)
                 numberedScans: (stats.qrScans || []).map((scan: any, index: number) => ({
                   ...scan,
@@ -166,6 +169,15 @@ export default function AdminStatistics() {
             }
           } catch (error) {
             console.log(`Erreur pour document ${doc.id}:`, error);
+            // Ajouter le document même en cas d'erreur pour maintenir la cohérence
+            documentStatsArray.push({
+              ...doc,
+              qrScans: [],
+              downloads: [],
+              qrScanCount: 0,
+              downloadCount: 0,
+              numberedScans: []
+            });
           }
         }
 
@@ -189,35 +201,6 @@ export default function AdminStatistics() {
     }
   };
 
-  const fetchGlobalDocumentStatistics = async () => {
-    try {
-      console.log('📊 Récupération des statistiques globales...');
-      const response = await fetch('/api/admin/document-stats-global');
-      if (response.ok) {
-        const globalStats = await response.json();
-        
-        console.log('📊 Statistiques globales reçues:', globalStats);
-        
-        setTotalScans(globalStats.totalScans || 0);
-        setTotalDownloads(globalStats.totalDownloads || 0);
-        
-        console.log('📊 Compteurs mis à jour:', {
-          totalScans: globalStats.totalScans || 0,
-          totalDownloads: globalStats.totalDownloads || 0
-        });
-      } else {
-        console.log('⚠️ Erreur lors de la récupération des statistiques globales:', response.status);
-        // Fallback: utiliser les statistiques des documents individuels
-        console.log('🔄 Utilisation du fallback...');
-        await fetchDocumentStatistics();
-      }
-    } catch (error) {
-      console.error('❌ Erreur lors de la récupération des statistiques globales:', error);
-      // Fallback: utiliser les statistiques des documents individuels
-      console.log('🔄 Utilisation du fallback après erreur...');
-      await fetchDocumentStatistics();
-    }
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
