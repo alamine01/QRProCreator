@@ -309,24 +309,25 @@ export default function AdminEventsPage() {
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                   <button
                     onClick={() => router.push(`/admin/events/${event.id}`)}
-                    className="flex-1 inline-flex items-center justify-center px-3 lg:px-4 py-2 lg:py-2.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm lg:text-base"
+                    className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs sm:text-sm font-medium"
                   >
-                    <FaEye className="mr-1 lg:mr-2 text-sm lg:text-base" />
-                    <span className="hidden sm:inline">Voir</span>
-                    <span className="sm:hidden">Détails</span>
+                    <FaEye className="mr-1.5 w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Voir détails</span>
+                    <span className="sm:hidden">Voir</span>
                   </button>
                   <button
                     onClick={() => router.push(`/admin/events/${event.id}/edit`)}
-                    className="flex-1 inline-flex items-center justify-center px-3 lg:px-4 py-2 lg:py-2.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm lg:text-base"
+                    className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs sm:text-sm font-medium"
                   >
-                    <FaEdit className="mr-1 lg:mr-2 text-sm lg:text-base" />
-                    Modifier
+                    <FaEdit className="mr-1.5 w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Modifier</span>
+                    <span className="sm:hidden">Edit</span>
                   </button>
                   <button
                     onClick={() => handleDeleteEvent(event.id)}
-                    className="flex-1 inline-flex items-center justify-center px-3 lg:px-4 py-2 lg:py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm lg:text-base"
+                    className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-xs sm:text-sm font-medium"
                   >
-                    <FaTrash className="mr-1 lg:mr-2 text-sm lg:text-base" />
+                    <FaTrash className="mr-1.5 w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="hidden sm:inline">Supprimer</span>
                     <span className="sm:hidden">Suppr.</span>
                   </button>
