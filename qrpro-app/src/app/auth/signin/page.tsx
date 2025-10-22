@@ -31,18 +31,31 @@ export default function SignInPage() {
   }, [user, loading, router]);
 
   const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
       await signInWithGoogle();
       // La redirection se fera automatiquement via useEffect
     } catch (error: any) {
       console.error('Erreur de connexion:', error);
       
-      // Gérer spécifiquement l'erreur de domaine non autorisé
-      if (error.code === 'auth/unauthorized-domain') {
+      // Gérer spécifiquement les erreurs
+      if (error.code === 'auth/popup-closed-by-user') {
+        setError('Connexion annulée. Veuillez réessayer.');
+      } else if (error.code === 'auth/popup-blocked') {
+        setError('Popup bloqué par le navigateur. Veuillez autoriser les popups pour ce site.');
+      } else if (error.code === 'auth/unauthorized-domain') {
         setError('Domaine non autorisé. Veuillez utiliser la connexion par email ou contacter l\'administrateur.');
+      } else if (error.code === 'auth/operation-not-allowed') {
+        setError('Connexion Google non activée. Veuillez contacter l\'administrateur.');
+      } else if (error.message) {
+        setError(error.message);
       } else {
         setError('Erreur lors de la connexion avec Google');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 

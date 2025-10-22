@@ -50,10 +50,27 @@ try {
 // Fonction de connexion Google
 export const signInWithGoogle = async () => {
   try {
+    console.log('Tentative de connexion Google...');
+    console.log('Auth domain:', firebaseConfig.authDomain);
+    console.log('Current domain:', window.location.hostname);
+    
     const result = await signInWithPopup(auth, googleProvider);
+    console.log('Connexion Google réussie:', result.user.email);
     return result.user;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur de connexion Google:', error);
+    
+    // Gestion spécifique des erreurs
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('Connexion annulée par l\'utilisateur');
+    } else if (error.code === 'auth/popup-blocked') {
+      throw new Error('Popup bloqué par le navigateur. Veuillez autoriser les popups pour ce site.');
+    } else if (error.code === 'auth/unauthorized-domain') {
+      throw new Error('Domaine non autorisé. Veuillez contacter l\'administrateur.');
+    } else if (error.code === 'auth/operation-not-allowed') {
+      throw new Error('Connexion Google non activée. Veuillez contacter l\'administrateur.');
+    }
+    
     throw error;
   }
 };
