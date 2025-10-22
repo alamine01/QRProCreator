@@ -40,8 +40,8 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Protection des API admin
-  if (pathname.startsWith('/api/admin')) {
+  // Protection des API admin (désactivée en développement local)
+  if (pathname.startsWith('/api/admin') && process.env.NODE_ENV === 'production') {
     const token = request.cookies.get('auth-token')?.value;
     
     if (!token) {
