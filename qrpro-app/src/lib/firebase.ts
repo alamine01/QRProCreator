@@ -6,12 +6,12 @@ import { User, Order, Product, OrderItem, CustomerInfo, PaymentInfo } from '@/ty
 import { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } from './email';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB0KphmN9-QMDdn7lRjicz4QbJVrX99mnc",
-  authDomain: "studio-6374747103-d0730.firebaseapp.com",
-  projectId: "studio-6374747103-d0730",
-  storageBucket: "studio-6374747103-d0730.firebasestorage.app",
-  messagingSenderId: "541216504423",
-  appId: "1:541216504423:web:dfc96bf03a35a0def972c2",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyB0KphmN9-QMDdn7lRjicz4QbJVrX99mnc",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "studio-6374747103-d0730.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "studio-6374747103-d0730",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "studio-6374747103-d0730.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "541216504423",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:541216504423:web:dfc96bf03a35a0def972c2",
 };
 
 // Debug: Log the config to see what's being used

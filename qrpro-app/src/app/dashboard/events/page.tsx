@@ -208,22 +208,23 @@ export default function UserEventsPage() {
                   </div>
 
                   {/* Actions simplifiées */}
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <button
                       onClick={() => router.push(`/dashboard/events/${event.id}`)}
-                      className="flex-1 inline-flex items-center justify-center px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 lg:py-3.5 bg-[#F15A22] text-white rounded-lg hover:opacity-90 transition-opacity text-sm sm:text-base lg:text-lg font-medium"
+                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-[#F15A22] text-white rounded-lg hover:opacity-90 transition-opacity text-xs sm:text-sm font-medium"
                     >
-                      <FaEye className="mr-2 text-sm sm:text-base lg:text-lg" />
+                      <FaEye className="mr-1.5 w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline">Voir détails</span>
-                      <span className="sm:hidden">Détails</span>
+                      <span className="sm:hidden">Voir</span>
                     </button>
                     {event.ownerId === firebaseUser?.uid && (
                       <button
                         onClick={() => router.push(`/admin/events/${event.id}/edit`)}
-                        className="flex-1 inline-flex items-center justify-center px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 lg:py-3.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm sm:text-base lg:text-lg font-medium"
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-xs sm:text-sm font-medium"
                       >
-                        <FaQrcode className="mr-2 text-sm sm:text-base lg:text-lg" />
-                        Modifier
+                        <FaQrcode className="mr-1.5 w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Modifier</span>
+                        <span className="sm:hidden">Edit</span>
                       </button>
                     )}
                   </div>
